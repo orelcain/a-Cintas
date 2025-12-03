@@ -1,0 +1,2089 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informe Técnico - Cintas Transportadoras MEJORADO</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --color-primary: #5499c7;
+            --color-area: #85929e;
+            --color-header: #34495e;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', 'Segoe UI', 'Roboto', Arial, sans-serif; background: #f0f2f5; padding: 15px; font-size: 11px; line-height: 1.5; }
+        .container { max-width: 1800px; margin: 0 auto; background: white; padding: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 8px; }
+        .header { text-align: center; border-bottom: 3px solid #2c3e50; padding-bottom: 15px; margin-bottom: 20px; }
+        h1 { font-size: 22px; color: #2c3e50; margin-bottom: 8px; font-weight: 700; letter-spacing: 0.5px; }
+        .subtitle { font-size: 12px; color: #7f8c8d; font-weight: 400; }
+        
+        /* Botones de acción */
+        .export-buttons { 
+            text-align: center; 
+            margin-bottom: 15px; 
+            padding: 12px 20px; 
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+            border-radius: 8px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 10px; 
+            flex-wrap: wrap;
+            box-shadow: 0 4px 15px rgba(52, 73, 94, 0.3);
+        }
+        .btn { 
+            padding: 8px 16px; 
+            border: none;
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 11px; 
+            font-weight: 600; 
+            transition: all 0.3s;
+            text-transform: uppercase; 
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.25); }
+        .btn-pdf { background: linear-gradient(135deg, #5d6d7e 0%, #34495e 100%); color: white; }
+        .btn-excel { background: linear-gradient(135deg, #566573 0%, #34495e 100%); color: white; }
+        .btn-primary { background: linear-gradient(135deg, #5499c7 0%, #2e86c1 100%); color: white; }
+        .btn-warning { background: linear-gradient(135deg, #85929e 0%, #5d6d7e 100%); color: white; }
+        .btn-danger { background: linear-gradient(135deg, #a6acaf 0%, #85929e 100%); color: white; }
+        .btn-add-section { background: linear-gradient(135deg, #5499c7 0%, #2e86c1 100%); color: white; font-size: 13px; padding: 10px 20px; margin: 15px auto; display: block; }
+        
+        
+        /* Secciones de cintas */
+        .area-field {
+            background: linear-gradient(135deg, #85929e 0%, #5d6d7e 100%);
+            color: white;
+            padding: 10px 15px;
+            font-size: 14px;
+            font-weight: 700;
+            border: none;
+            width: 100%;
+            display: block;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            text-align: left;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: text;
+        }
+        .area-field::placeholder { color: rgba(255,255,255,0.7); font-size: 12px; }
+        
+        .cinta-section { 
+            margin-bottom: 25px; 
+            border: 2px solid #ecf0f1; 
+            padding: 15px; 
+            padding-top: 8px;
+            border-radius: 8px;
+            background: #fafafa;
+            position: relative;
+            transition: all 0.3s;
+        }
+        .cinta-section:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .cinta-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; margin-left: 8px; }
+        .cinta-title-editable { 
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+            color: white; 
+            padding: 8px 12px; 
+            font-size: 13px; 
+            font-weight: 700;
+            border: none; 
+            flex-grow: 1;
+            border-radius: 6px;
+            margin-right: 10px;
+        }
+        .cinta-controls { display: flex; gap: 5px; }
+        .btn-small { padding: 4px 8px; font-size: 10px; border-radius: 4px; cursor: pointer; border: none; font-weight: 600; }
+        .btn-move-up { background: #3498db; color: white; }
+        .btn-move-down { background: #9b59b6; color: white; }
+        .btn-delete-section { background: #e74c3c; color: white; }
+        
+        .cinta-content { display: grid; grid-template-columns: 35% 65%; gap: 15px; align-items: start; }
+        
+        /* Tablas dinámicas */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 10px; background: white; border-radius: 6px; overflow: hidden; }
+        th { background: linear-gradient(135deg, #bdc3c7 0%, #95a5a6 100%); padding: 8px 10px; text-align: left; font-weight: 700; border: 1px solid #95a5a6; font-size: 11px; color: #2c3e50; letter-spacing: 0.3px; }
+        td { padding: 6px 8px; border: 1px solid #ecf0f1; vertical-align: middle; }
+        .label-col { 
+            background: #f8f9fa; 
+            font-weight: 600; 
+            width: 25%; 
+            font-size: 11px; 
+            color: #34495e;
+            cursor: text;
+            user-select: text;
+            transition: background 0.2s;
+        }
+        .label-col:hover { background: #e8eef1; }
+        .label-col:focus { 
+            outline: 2px solid #5499c7;
+            outline-offset: -2px;
+            background: #fff;
+        }
+        .value-col { position: relative; } /* Sin ancho fijo, se distribuye proporcionalmente */
+        .editable-field { 
+            width: 100%; 
+            border: 1px solid #dfe4ea; 
+            padding: 6px 10px; 
+            font-size: 11px;
+            font-family: 'Inter', 'Segoe UI', 'Roboto', Arial, sans-serif;
+            background: white;
+            border-radius: 4px;
+            resize: none;
+            overflow: hidden;
+            min-height: 20px;
+            transition: border-color 0.3s;
+        }
+        .editable-field:focus { outline: none; border-color: #3498db; box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2); }
+        
+        .row-controls { 
+            position: absolute; 
+            right: -35px; 
+            top: 50%; 
+            transform: translateY(-50%);
+            display: none;
+            flex-direction: column;
+            gap: 3px;
+            z-index: 10;
+        }
+        tr:hover .row-controls { display: flex; }
+        .btn-row { 
+            width: 22px; 
+            height: 22px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+        .btn-row:hover { transform: scale(1.15); box-shadow: 0 3px 6px rgba(0,0,0,0.25); }
+        .btn-add-row { background: linear-gradient(135deg, #27ae60 0%, #229954 100%); color: white; }
+        .btn-delete-row { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; }
+        .btn-add-col { background: #3498db; color: white; }
+        .btn-delete-col { background: #e67e22; color: white; }
+        
+        .col-controls {
+            position: relative;
+            display: inline-flex;
+            gap: 2px;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+        .btn-col {
+            width: 18px;
+            height: 18px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .table-controls { margin-top: 8px; display: flex; gap: 8px; }
+        .section-subtitle { 
+            background: linear-gradient(135deg, #5499c7 0%, #2e86c1 100%);
+            color: white; 
+            padding: 6px 10px; 
+            font-size: 11px; 
+            font-weight: 700;
+            margin: 12px 0 8px 0; 
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        /* Multimedia */
+        .multimedia-section { background: white; padding: 12px; border-radius: 8px; border: 2px solid #ecf0f1; }
+        .multimedia-title { 
+            font-weight: 700;
+            font-size: 11px; 
+            margin-bottom: 8px; 
+            color: #2c3e50;
+            text-transform: uppercase;
+            border-bottom: 2px solid #5499c7;
+            padding-bottom: 5px;
+        }
+        .add-photo-btn { 
+            padding: 6px 12px; 
+            margin-bottom: 10px; 
+            background: linear-gradient(135deg, #5499c7 0%, #2e86c1 100%);
+            color: white; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 10px; 
+            font-weight: 700;
+            transition: all 0.3s;
+        }
+        .add-photo-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3); }
+        
+        .image-grid { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 8px; 
+            margin-bottom: 12px;
+            align-items: flex-start;
+        }
+        .image-item { 
+            border: 2px solid #ecf0f1; 
+            border-radius: 6px; 
+            background: white; 
+            position: relative;
+            cursor: move;
+            transition: all 0.3s;
+            display: inline-block;
+            margin: 8px;
+            min-width: 150px;
+            min-height: 100px;
+            overflow: hidden;
+            vertical-align: top;
+        }
+        .image-item:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.15); transform: translateY(-2px); }
+        .image-item.dragging { opacity: 0.5; }
+        .image-item img { 
+            display: block; 
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain; 
+            background: white;
+            pointer-events: none;
+            max-width: 100%;
+            max-height: 100%;
+        }
+        
+        .rotate-btn, .delete-btn, .zoom-controls { 
+            position: absolute; 
+            top: 5px;
+            background: rgba(84, 153, 199, 0.95);
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            padding: 4px 8px; 
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer; 
+            z-index: 10;
+            transition: all 0.2s;
+        }
+        .zoom-controls { left: 5px; display: flex; gap: 3px; padding: 3px 5px; }
+        .rotate-btn { left: 75px; }
+        .rotate-btn:hover { background: rgba(52, 152, 219, 1); transform: rotate(90deg); }
+        .delete-btn { left: 110px; background: rgba(231, 76, 60, 0.95); }
+        .delete-btn:hover { background: rgba(231, 76, 60, 1); }
+        .zoom-btn { background: none; border: none; color: white; font-size: 16px; cursor: pointer; padding: 0 5px; font-weight: 700; }
+        .zoom-btn:hover { color: #f1c40f; }
+        
+        .save-status { 
+            position: fixed; 
+            bottom: 25px; 
+            right: 25px;
+            background: rgba(52, 152, 219, 0.95);
+            color: white; 
+            padding: 12px 24px; 
+            border-radius: 8px;
+            font-size: 12px; 
+            font-weight: 700;
+            z-index: 10000;
+            display: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .save-status.show { display: block; animation: slideIn 0.3s; }
+        .save-status.saved { background: rgba(39, 174, 96, 0.95); }
+        
+        @keyframes slideIn { 
+            from { opacity: 0; transform: translateX(100px); } 
+            to { opacity: 1; transform: translateX(0); } 
+        }
+        
+        @media print {
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; padding: 15px; }
+            .export-buttons, .add-photo-btn, .btn-small, .cinta-controls, .table-controls, .row-controls, .col-controls { display: none !important; }
+            .delete-btn, .rotate-btn, .zoom-controls { display: none !important; }
+            .section-subtitle button, .section-subtitle div { display: none !important; }
+            .image-item { page-break-inside: avoid; border: 1px solid #ddd !important; }
+            .image-item img { max-width: 100% !important; height: auto !important; object-fit: contain !important; }
+            .cinta-section { page-break-inside: avoid; border: 1px solid #ddd; }
+            th[contenteditable], td[contenteditable] { border: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="printable-content">
+        <div class="header">
+            <h1 contenteditable="true" oninput="autoSave()" style="cursor: text; outline: none;">🔧 INFORME TÉCNICO - CINTAS TRANSPORTADORAS</h1>
+            <p class="subtitle" contenteditable="true" oninput="autoSave()" style="cursor: text; outline: none;">Especificaciones y dimensiones de equipos | Fecha: <span contenteditable="true" style="border-bottom: 2px solid #5499c7; padding: 2px 8px; background: #ecf0f1; border-radius: 4px;">01/12/2025</span></p>
+        </div>
+        
+        <!-- Panel de Personalización de Colores -->
+        <div style="background: #ecf0f1; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <label style="font-weight: 600; font-size: 11px;">🎨 Color Principal:</label>
+                    <input type="color" id="color-primary" value="#5499c7" onchange="updateColors()" style="width: 40px; height: 30px; border: none; cursor: pointer; border-radius: 4px;">
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <label style="font-weight: 600; font-size: 11px;">🎨 Color Área:</label>
+                    <input type="color" id="color-area" value="#85929e" onchange="updateColors()" style="width: 40px; height: 30px; border: none; cursor: pointer; border-radius: 4px;">
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <label style="font-weight: 600; font-size: 11px;">🎨 Color Encabezado:</label>
+                    <input type="color" id="color-header" value="#34495e" onchange="updateColors()" style="width: 40px; height: 30px; border: none; cursor: pointer; border-radius: 4px;">
+                </div>
+                <button class="btn btn-warning" onclick="resetColors()" style="font-size: 10px; padding: 6px 12px;">↻ Restaurar colores</button>
+            </div>
+        </div>
+        
+        <div class="export-buttons" id="export-buttons">
+            <button class="btn btn-primary" onclick="saveAllDataManually()">💾 Guardar Todo</button>
+            <button class="btn btn-success" onclick="exportDataWithImages()" style="background: linear-gradient(135deg, #27ae60 0%, #229954 100%);">📦 Exportar Datos+Fotos</button>
+            <button class="btn btn-warning" onclick="document.getElementById('import-data-file').click()" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);">📥 Importar Datos+Fotos</button>
+            <input type="file" id="import-data-file" accept=".json" style="display: none;" onchange="importDataWithImages(this)">
+            <button class="btn btn-pdf" onclick="showPDFOptions()">📄 Exportar PDF Pro</button>
+            <button class="btn btn-excel" onclick="exportToExcel()">📊 Exportar Excel</button>
+            <button class="btn btn-danger" onclick="clearSavedData()">🗑️ Limpiar Datos</button>
+            <select id="pdf-quality" style="padding: 8px 12px; border-radius: 6px; border: 2px solid #fff; background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%); color: white; font-weight: 700; cursor: pointer; font-size: 11px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                <option value="low" style="background: #34495e; color: white;">📉 Calidad Baja</option>
+                <option value="medium" selected style="background: #34495e; color: white;">📊 Calidad Media</option>
+                <option value="high" style="background: #34495e; color: white;">📈 Calidad Alta</option>
+                <option value="ultra" style="background: #34495e; color: white;">🎯 Calidad Ultra</option>
+            </select>
+            <select id="pdf-image-size" style="padding: 8px 12px; border-radius: 6px; border: 2px solid #fff; background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%); color: white; font-weight: 700; cursor: pointer; font-size: 11px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                <option value="small" style="background: #34495e; color: white;">📐 Pequeña (60mm)</option>
+                <option value="medium" style="background: #34495e; color: white;">📐 Mediana (85mm)</option>
+                <option value="large" selected style="background: #34495e; color: white;">📐 Grande (110mm)</option>
+                <option value="xlarge" style="background: #34495e; color: white;">📐 Muy Grande (140mm)</option>
+            </select>
+        </div>
+        <div id="save-status" class="save-status"></div>
+
+        <div id="cintas-container"></div>
+        
+        <button class="btn btn-add-section" onclick="addNewCintaSection()">➕ Agregar Nueva Cinta</button>
+    </div>
+
+    <script>
+        // ==================== VARIABLES GLOBALES ====================
+        let projectDirectoryHandle = null;
+        let imagesFolderHandle = null;
+        let saveTimeout;
+        let hasUnsavedChanges = false;
+        let cintaCounter = 1;
+        let pdfQualitySettings = {
+            'low': { scale: 2, quality: 0.70, size: 70 },
+            'medium': { scale: 3, quality: 0.85, size: 85 },
+            'high': { scale: 4, quality: 0.95, size: 100 },
+            'ultra': { scale: 6, quality: 0.98, size: 120 }
+        };
+        
+        // ==================== GESTIÓN DE CARPETAS Y PERSISTENCIA ====================
+        async function openDatabase() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('CintasPlantaDB', 2);
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => resolve(request.result);
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains('handles')) {
+                        db.createObjectStore('handles');
+                    }
+                    if (!db.objectStoreNames.contains('images')) {
+                        db.createObjectStore('images'); // Para guardar imágenes
+                    }
+                };
+            });
+        }
+        
+        async function saveDirectoryHandle(handle) {
+            try {
+                const db = await openDatabase();
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction(['handles'], 'readwrite');
+                    const store = transaction.objectStore('handles');
+                    const request = store.put(handle, 'projectDirectory');
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
+            } catch (e) {
+                console.error('Error guardando handle:', e);
+            }
+        }
+        
+        async function loadDirectoryHandle() {
+            try {
+                const db = await openDatabase();
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction(['handles'], 'readonly');
+                    const store = transaction.objectStore('handles');
+                    const request = store.get('projectDirectory');
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => resolve(null);
+                });
+            } catch (e) {
+                return null;
+            }
+        }
+        
+        // ==================== FUNCIONES PARA INDEXEDDB DE IMÁGENES ====================
+        async function saveImageToIndexedDB(imageId, imageData) {
+            try {
+                const db = await openDatabase();
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction(['images'], 'readwrite');
+                    const store = transaction.objectStore('images');
+                    const request = store.put(imageData, imageId);
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
+            } catch (e) {
+                console.error('Error guardando imagen en IndexedDB:', e);
+                throw e;
+            }
+        }
+        
+        async function loadImageFromIndexedDB(imageId) {
+            try {
+                const db = await openDatabase();
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction(['images'], 'readonly');
+                    const store = transaction.objectStore('images');
+                    const request = store.get(imageId);
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => resolve(null);
+                });
+            } catch (e) {
+                console.error('Error cargando imagen de IndexedDB:', e);
+                return null;
+            }
+        }
+        
+        async function deleteImageFromIndexedDB(imageId) {
+            try {
+                const db = await openDatabase();
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction(['images'], 'readwrite');
+                    const store = transaction.objectStore('images');
+                    const request = store.delete(imageId);
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
+            } catch (e) {
+                console.error('Error eliminando imagen de IndexedDB:', e);
+            }
+        }
+        
+        function updateConnectionStatus(connected) {
+            const statusDiv = document.getElementById('file-system-status');
+            const statusIcon = document.getElementById('status-icon');
+            const statusText = document.getElementById('status-text');
+            const connectBtn = document.getElementById('connect-folder-btn');
+            
+            if (connected) {
+                statusDiv.className = 'status-badge connected';
+                statusText.textContent = 'Conectado';
+                connectBtn.style.display = 'none';
+            } else {
+                statusDiv.className = 'status-badge disconnected';
+                statusText.textContent = 'Desconectado';
+                connectBtn.style.display = 'inline-block';
+            }
+        }
+        
+        async function connectFolderManually() {
+            const success = await setupProjectDirectory();
+            if (success) {
+                updateConnectionStatus(true);
+                showSaveStatus('✅ Carpeta conectada correctamente', true);
+                await syncImagesFromFolder();
+            }
+        }
+        
+        async function setupProjectDirectory() {
+            try {
+                if (!('showDirectoryPicker' in window)) {
+                    alert('Tu navegador no soporta esta función. Usa Chrome o Edge.');
+                    return false;
+                }
+                
+                projectDirectoryHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+                imagesFolderHandle = await projectDirectoryHandle.getDirectoryHandle('imagenes', { create: true });
+                await saveDirectoryHandle(projectDirectoryHandle);
+                return true;
+            } catch (e) {
+                console.error('Error:', e);
+                return false;
+            }
+        }
+        
+        async function syncImagesFromFolder() {
+            // Implementación similar al original
+            console.log('Sincronizando imágenes...');
+        }
+        
+        function showSaveStatus(message, isSuccess) {
+            const status = document.getElementById('save-status');
+            status.textContent = message;
+            status.className = isSuccess ? 'save-status saved show' : 'save-status show';
+            setTimeout(() => status.classList.remove('show'), 3000);
+        }
+        
+        // ==================== GESTIÓN DINÁMICA DE CINTAS ====================
+        function createCintaSection(cintaNum, title = '', area = '') {
+            const section = document.createElement('div');
+            section.className = 'cinta-section';
+            section.setAttribute('data-cinta-id', cintaNum);
+            
+            section.innerHTML = `
+                <input type="text" class="area-field" value="${area}" oninput="autoSave()" placeholder="📍 ÁREA (Ej: ÁREA FILETE, ÁREA EVISCERADO)" data-area-field contenteditable="true">
+                <div class="cinta-header">
+                    <input type="text" class="cinta-title-editable" value="${title || 'CINTA ' + cintaNum + ' - Nueva Cinta'}" oninput="autoSave()" placeholder="Nombre de la cinta">
+                    <div class="cinta-controls">
+                        <button class="btn-small btn-move-up" onclick="moveCintaUp(${cintaNum})" title="Mover arriba">↑</button>
+                        <button class="btn-small btn-move-down" onclick="moveCintaDown(${cintaNum})" title="Mover abajo">↓</button>
+                        <button class="btn-small btn-delete-section" onclick="deleteCintaSection(${cintaNum})" title="Eliminar cinta">🗑️</button>
+                    </div>
+                </div>
+                <div class="cinta-content">
+                    <div class="cinta-data">
+                        <div class="section-subtitle">
+                            <span contenteditable="true" oninput="autoSave()" style="cursor: text; outline: none;">📋 ESPECIFICACIONES DE BANDA</span>
+                            <div>
+                                <button class="btn-small btn-add-row" onclick="addTableRow(${cintaNum}, 'banda')" style="background: #5499c7; color: white;">+ Fila</button>
+                                <button class="btn-small btn-add-col" onclick="addTableColumn(${cintaNum}, 'banda')" style="background: #5499c7; color: white;">+ Columna</button>
+                            </div>
+                        </div>
+                        <table class="table-banda" data-table-id="banda-${cintaNum}">
+                            <thead>
+                                <tr>
+                                    <th style="width: 25%">Campo</th>
+                                    <th style="width: 75%">Valor
+                                        <span class="col-controls">
+                                            <button class="btn-col btn-add-col" onclick="addColumnAfter(this)" title="Insertar columna">+</button>
+                                        </span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="label-col" contenteditable="true" oninput="autoSave()">Tipo de banda</td>
+                                    <td class="value-col">
+                                        <textarea class="editable-field" rows="1" oninput="autoExpandTextarea(this); autoSave();" placeholder="Ej: Serie 1100 Flush Grid"></textarea>
+                                        <div class="row-controls">
+                                            <button class="btn-row btn-add-row" onclick="insertRowAfter(this)" title="Insertar fila">+</button>
+                                            <button class="btn-row btn-delete-row" onclick="deleteRow(this)" title="Eliminar fila">×</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="label-col" contenteditable="true" oninput="autoSave()">Material</td>
+                                    <td class="value-col">
+                                        <textarea class="editable-field" rows="1" oninput="autoExpandTextarea(this); autoSave();" placeholder="Ej: Polipropileno Blanco"></textarea>
+                                        <div class="row-controls">
+                                            <button class="btn-row btn-add-row" onclick="insertRowAfter(this)" title="Insertar fila">+</button>
+                                            <button class="btn-row btn-delete-row" onclick="deleteRow(this)" title="Eliminar fila">×</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="label-col" contenteditable="true" oninput="autoSave()">Ancho</td>
+                                    <td class="value-col">
+                                        <textarea class="editable-field" rows="1" oninput="autoExpandTextarea(this); autoSave();" placeholder="Ej: 304 mm"></textarea>
+                                        <div class="row-controls">
+                                            <button class="btn-row btn-add-row" onclick="insertRowAfter(this)" title="Insertar fila">+</button>
+                                            <button class="btn-row btn-delete-row" onclick="deleteRow(this)" title="Eliminar fila">×</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="label-col" contenteditable="true" oninput="autoSave()">Largo</td>
+                                    <td class="value-col">
+                                        <textarea class="editable-field" rows="1" oninput="autoExpandTextarea(this); autoSave();" placeholder="Ej: 5.5 metros"></textarea>
+                                        <div class="row-controls">
+                                            <button class="btn-row btn-add-row" onclick="insertRowAfter(this)" title="Insertar fila">+</button>
+                                            <button class="btn-row btn-delete-row" onclick="deleteRow(this)" title="Eliminar fila">×</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="label-col" contenteditable="true" oninput="autoSave()">Varillas</td>
+                                    <td class="value-col">
+                                        <textarea class="editable-field" rows="1" oninput="autoExpandTextarea(this); autoSave();" placeholder="Ej: Acetal Blanco"></textarea>
+                                        <div class="row-controls">
+                                            <button class="btn-row btn-add-row" onclick="insertRowAfter(this)" title="Insertar fila">+</button>
+                                            <button class="btn-row btn-delete-row" onclick="deleteRow(this)" title="Eliminar fila">×</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="label-col" contenteditable="true" oninput="autoSave()">Proveedor</td>
+                                    <td class="value-col">
+                                        <textarea class="editable-field" rows="1" oninput="autoExpandTextarea(this); autoSave();" placeholder="Nombre del proveedor"></textarea>
+                                        <div class="row-controls">
+                                            <button class="btn-row btn-add-row" onclick="insertRowAfter(this)" title="Insertar fila">+</button>
+                                            <button class="btn-row btn-delete-row" onclick="deleteRow(this)" title="Eliminar fila">×</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <div class="section-subtitle">
+                            <span contenteditable="true" oninput="autoSave()" style="cursor: text; outline: none;">⚙️ MOTORREDUCTOR</span>
+                            <div>
+                                <button class="btn-small" onclick="copyMotorData(${cintaNum})" style="background: #9b59b6; color: white;" title="Copiar datos de otro motor">📋 Copiar Motor</button>
+                                <button class="btn-small btn-add-row" onclick="addTableRow(${cintaNum}, 'motor')" style="background: #5499c7; color: white;">+ Fila</button>
+                                <button class="btn-small btn-add-col" onclick="addTableColumn(${cintaNum}, 'motor')" style="background: #5499c7; color: white;">+ Columna</button>
+                            </div>
+                        </div>
+                        <table class="table-motor" data-table-id="motor-${cintaNum}">
+                            <thead>
+                                <tr>
+                                    <th style="width: 25%">Campo</th>
+                                    <th style="width: 75%">Valor
+                                        <span class="col-controls">
+                                            <button class="btn-col btn-add-col" onclick="addColumnAfter(this)" title="Insertar columna">+</button>
+                                        </span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="label-col" contenteditable="true" oninput="autoSave()">Marca / Modelo</td>
+                                    <td class="value-col">
+                                        <textarea class="editable-field" rows="1" oninput="autoExpandTextarea(this); autoSave();" placeholder="Ej: SEW Eurodrive"></textarea>
+                                        <div class="row-controls">
+                                            <button class="btn-row btn-add-row" onclick="insertRowAfter(this)" title="Insertar fila">+</button>
+                                            <button class="btn-row btn-delete-row" onclick="deleteRow(this)" title="Eliminar fila">×</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="label-col" contenteditable="true" oninput="autoSave()">Potencia</td>
+                                    <td class="value-col">
+                                        <textarea class="editable-field" rows="1" oninput="autoExpandTextarea(this); autoSave();" placeholder="Ej: 1.5 HP / 1.1 kW"></textarea>
+                                        <div class="row-controls">
+                                            <button class="btn-row btn-add-row" onclick="insertRowAfter(this)" title="Insertar fila">+</button>
+                                            <button class="btn-row btn-delete-row" onclick="deleteRow(this)" title="Eliminar fila">×</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="label-col" contenteditable="true" oninput="autoSave()">Voltaje</td>
+                                    <td class="value-col">
+                                        <textarea class="editable-field" rows="1" oninput="autoExpandTextarea(this); autoSave();" placeholder="Ej: 220/380V - 60Hz"></textarea>
+                                        <div class="row-controls">
+                                            <button class="btn-row btn-add-row" onclick="insertRowAfter(this)" title="Insertar fila">+</button>
+                                            <button class="btn-row btn-delete-row" onclick="deleteRow(this)" title="Eliminar fila">×</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="label-col" contenteditable="true" oninput="autoSave()">RPM Motor / Salida</td>
+                                    <td class="value-col">
+                                        <textarea class="editable-field" rows="1" oninput="autoExpandTextarea(this); autoSave();" placeholder="Ej: 1720 RPM / 43 RPM"></textarea>
+                                        <div class="row-controls">
+                                            <button class="btn-row btn-add-row" onclick="insertRowAfter(this)" title="Insertar fila">+</button>
+                                            <button class="btn-row btn-delete-row" onclick="deleteRow(this)" title="Eliminar fila">×</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="label-col" contenteditable="true" oninput="autoSave()">Corriente nominal</td>
+                                    <td class="value-col">
+                                        <textarea class="editable-field" rows="1" oninput="autoExpandTextarea(this); autoSave();" placeholder="Ej: 3.2 / 1.85 A"></textarea>
+                                        <div class="row-controls">
+                                            <button class="btn-row btn-add-row" onclick="insertRowAfter(this)" title="Insertar fila">+</button>
+                                            <button class="btn-row btn-delete-row" onclick="deleteRow(this)" title="Eliminar fila">×</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="label-col" contenteditable="true" oninput="autoSave()">Número de serie</td>
+                                    <td class="value-col">
+                                        <textarea class="editable-field" rows="1" oninput="autoExpandTextarea(this); autoSave();" placeholder=""></textarea>
+                                        <div class="row-controls">
+                                            <button class="btn-row btn-add-row" onclick="insertRowAfter(this)" title="Insertar fila">+</button>
+                                            <button class="btn-row btn-delete-row" onclick="deleteRow(this)" title="Eliminar fila">×</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="multimedia-section">
+                        <div class="multimedia-title">📸 FOTOS - BANDA Y SPROCKETS</div>
+                        <button class="add-photo-btn" onclick="addPhoto('grid-${cintaNum}-banda')">📷 Agregar Foto</button>
+                        <input type="file" id="file-${cintaNum}-banda" accept="image/*" style="display: none;" onchange="handlePhotoUpload(this, 'grid-${cintaNum}-banda')" multiple />
+                        <div class="image-grid" id="grid-${cintaNum}-banda"></div>
+                        
+                        <div class="multimedia-title" style="margin-top: 15px;">📸 FOTOS - MOTORREDUCTOR</div>
+                        <button class="add-photo-btn" onclick="addPhoto('grid-${cintaNum}-motor')">📷 Agregar Foto</button>
+                        <input type="file" id="file-${cintaNum}-motor" accept="image/*" style="display: none;" onchange="handlePhotoUpload(this, 'grid-${cintaNum}-motor')" multiple />
+                        <div class="image-grid" id="grid-${cintaNum}-motor"></div>
+                    </div>
+                </div>
+            `;
+            
+            return section;
+        }
+        
+        function addNewCintaSection() {
+            cintaCounter++;
+            const container = document.getElementById('cintas-container');
+            const section = createCintaSection(cintaCounter);
+            container.appendChild(section);
+            autoSave();
+            showSaveStatus('✅ Nueva cinta agregada', true);
+        }
+        
+        function deleteCintaSection(cintaNum) {
+            if (confirm('¿Eliminar esta cinta y todas sus imágenes?')) {
+                const section = document.querySelector(`[data-cinta-id="${cintaNum}"]`);
+                if (section) {
+                    section.remove();
+                    autoSave();
+                    showSaveStatus('✅ Cinta eliminada', true);
+                }
+            }
+        }
+        
+        function moveCintaUp(cintaNum) {
+            const section = document.querySelector(`[data-cinta-id="${cintaNum}"]`);
+            if (section && section.previousElementSibling) {
+                section.parentNode.insertBefore(section, section.previousElementSibling);
+                autoSave();
+            }
+        }
+        
+        function moveCintaDown(cintaNum) {
+            const section = document.querySelector(`[data-cinta-id="${cintaNum}"]`);
+            if (section && section.nextElementSibling) {
+                section.parentNode.insertBefore(section.nextElementSibling, section);
+                autoSave();
+            }
+        }
+        
+        // ==================== COPIAR DATOS DE MOTOR ====================
+        function copyMotorData(targetCintaNum) {
+            // Obtener lista de todas las cintas
+            const allSections = document.querySelectorAll('.cinta-section');
+            if (allSections.length < 2) {
+                alert('No hay otros motores para copiar. Necesitas al menos 2 cintas.');
+                return;
+            }
+            
+            // Crear lista de opciones
+            let options = 'Selecciona el motor a copiar:\n\n';
+            const cintaList = [];
+            allSections.forEach((section, index) => {
+                const cintaId = section.getAttribute('data-cinta-id');
+                if (cintaId !== String(targetCintaNum)) {
+                    const title = section.querySelector('.cinta-title-editable').value;
+                    cintaList.push({ id: cintaId, title: title, index: index + 1 });
+                    options += `${index + 1}. ${title}\n`;
+                }
+            });
+            
+            const selection = prompt(options + '\nIngresa el número:');
+            if (!selection) return;
+            
+            const selectedIndex = parseInt(selection) - 1;
+            if (isNaN(selectedIndex) || selectedIndex < 0 || selectedIndex >= allSections.length) {
+                alert('Selección inválida');
+                return;
+            }
+            
+            const sourceCintaId = allSections[selectedIndex].getAttribute('data-cinta-id');
+            
+            // Obtener datos de la tabla motor origen
+            const sourceTable = document.querySelector(`[data-table-id="motor-${sourceCintaId}"]`);
+            const targetTable = document.querySelector(`[data-table-id="motor-${targetCintaNum}"]`);
+            
+            if (!sourceTable || !targetTable) {
+                alert('Error al encontrar las tablas');
+                return;
+            }
+            
+            // Copiar estructura de encabezados
+            const sourceHeaders = sourceTable.querySelectorAll('thead th');
+            const targetThead = targetTable.querySelector('thead tr');
+            targetThead.innerHTML = '';
+            sourceHeaders.forEach((th, index) => {
+                const newTh = document.createElement('th');
+                if (index === 0) {
+                    newTh.style.width = '25%';
+                    newTh.textContent = th.textContent.trim();
+                } else {
+                    newTh.innerHTML = th.innerHTML;
+                }
+                targetThead.appendChild(newTh);
+            });
+            
+            // Copiar filas
+            const sourceRows = sourceTable.querySelectorAll('tbody tr');
+            const targetTbody = targetTable.querySelector('tbody');
+            targetTbody.innerHTML = '';
+            
+            sourceRows.forEach(row => {
+                const newRow = document.createElement('tr');
+                const label = row.querySelector('.label-col').textContent;
+                const values = Array.from(row.querySelectorAll('.editable-field')).map(field => field.value);
+                
+                let rowHTML = `<td class="label-col" contenteditable="true" oninput="autoSave()">${label}</td>`;
+                values.forEach((value, index) => {
+                    rowHTML += `
+                        <td class="value-col">
+                            <textarea class="editable-field" rows="1" oninput="autoExpandTextarea(this); autoSave();">${value}</textarea>
+                            ${index === 0 ? `<div class="row-controls">
+                                <button class="btn-row btn-add-row" onclick="insertRowAfter(this)" title="Insertar fila">+</button>
+                                <button class="btn-row btn-delete-row" onclick="deleteRow(this)" title="Eliminar fila">×</button>
+                            </div>` : ''}
+                        </td>
+                    `;
+                });
+                
+                newRow.innerHTML = rowHTML;
+                targetTbody.appendChild(newRow);
+                newRow.querySelectorAll('.editable-field').forEach(autoExpandTextarea);
+            });
+            
+            autoSave();
+            showSaveStatus('✅ Datos de motor copiados correctamente', true);
+        }
+        
+        // ==================== GESTIÓN DINÁMICA DE FILAS ====================
+        function addTableRow(cintaNum, tableType) {
+            const table = document.querySelector(`[data-table-id="${tableType}-${cintaNum}"] tbody`);
+            const firstRow = table.querySelector('tr');
+            const colCount = firstRow ? firstRow.cells.length : 2;
+            
+            const newRow = document.createElement('tr');
+            let rowHTML = '<td class="label-col" contenteditable="true" oninput="autoSave()">Nuevo campo</td>';
+            
+            for (let i = 1; i < colCount; i++) {
+                rowHTML += `
+                    <td class="value-col">
+                        <textarea class="editable-field" rows="1" oninput="autoExpandTextarea(this); autoSave();" placeholder="Valor"></textarea>
+                        ${i === 1 ? `<div class="row-controls">
+                            <button class="btn-row btn-add-row" onclick="insertRowAfter(this)" title="Insertar fila">+</button>
+                            <button class="btn-row btn-delete-row" onclick="deleteRow(this)" title="Eliminar fila">×</button>
+                        </div>` : ''}
+                    </td>
+                `;
+            }
+            
+            newRow.innerHTML = rowHTML;
+            table.appendChild(newRow);
+            autoSave();
+        }
+        
+        function insertRowAfter(button) {
+            const currentRow = button.closest('tr');
+            const newRow = currentRow.cloneNode(true);
+            newRow.querySelectorAll('.editable-field').forEach(field => field.value = '');
+            currentRow.parentNode.insertBefore(newRow, currentRow.nextSibling);
+            autoSave();
+        }
+        
+        function deleteRow(button) {
+            const row = button.closest('tr');
+            const tbody = row.parentNode;
+            if (tbody.children.length > 1) {
+                row.remove();
+                autoSave();
+            } else {
+                alert('No puedes eliminar la última fila de la tabla');
+            }
+        }
+        
+        // ==================== GESTIÓN DINÁMICA DE COLUMNAS ====================
+        function addTableColumn(cintaNum, tableType) {
+            const table = document.querySelector(`[data-table-id="${tableType}-${cintaNum}"]`);
+            const thead = table.querySelector('thead tr');
+            const tbody = table.querySelector('tbody');
+            
+            // Contar columnas actuales
+            const currentColCount = thead.cells.length;
+            const newColNum = currentColCount;
+            
+            // Calcular ancho proporcional para todas las columnas de valor
+            const labelWidth = 25; // 25% para etiquetas
+            const valueWidth = (100 - labelWidth) / currentColCount; // Dividir resto entre valores
+            
+            // Ajustar ancho de todas las columnas de valor existentes
+            for (let i = 1; i < thead.cells.length; i++) {
+                thead.cells[i].style.width = valueWidth + '%';
+            }
+            
+            // Agregar encabezado de columna
+            const newHeader = document.createElement('th');
+            newHeader.style.width = valueWidth + '%';
+            newHeader.innerHTML = `Valor ${newColNum}
+                <span class="col-controls">
+                    <button class="btn-col btn-add-col" onclick="addColumnAfter(this)" title="Insertar columna">+</button>
+                    <button class="btn-col btn-delete-col" onclick="deleteColumn(this)" title="Eliminar columna">×</button>
+                </span>`;
+            thead.appendChild(newHeader);
+            
+            // Actualizar controles de columnas existentes
+            const existingHeaders = thead.querySelectorAll('th:not(:first-child)');
+            existingHeaders.forEach((th, index) => {
+                if (index < existingHeaders.length - 1) {
+                    const controls = th.querySelector('.col-controls');
+                    if (controls && !controls.querySelector('.btn-delete-col')) {
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = 'btn-col btn-delete-col';
+                        deleteBtn.onclick = function() { deleteColumn(this); };
+                        deleteBtn.title = 'Eliminar columna';
+                        deleteBtn.textContent = '×';
+                        controls.appendChild(deleteBtn);
+                    }
+                }
+            });
+            
+            // Agregar celdas en cada fila del tbody
+            tbody.querySelectorAll('tr').forEach(row => {
+                const newCell = document.createElement('td');
+                newCell.className = 'value-col';
+                newCell.innerHTML = '<textarea class="editable-field" rows="1" oninput="autoExpandTextarea(this); autoSave();" placeholder="Valor"></textarea>';
+                row.appendChild(newCell);
+            });
+            
+            autoSave();
+        }
+        
+        function addColumnAfter(button) {
+            const th = button.closest('th');
+            const table = th.closest('table');
+            const thead = table.querySelector('thead tr');
+            const tbody = table.querySelector('tbody');
+            const colIndex = Array.from(thead.cells).indexOf(th);
+            
+            if (colIndex === 0) return; // No insertar después de la columna de etiquetas
+            
+            const currentColCount = thead.cells.length;
+            
+            // Calcular ancho proporcional para todas las columnas de valor
+            const labelWidth = 25; // 25% para etiquetas
+            const valueWidth = (100 - labelWidth) / currentColCount; // Nueva distribución
+            
+            // Ajustar ancho de todas las columnas de valor existentes
+            for (let i = 1; i < thead.cells.length; i++) {
+                thead.cells[i].style.width = valueWidth + '%';
+            }
+            
+            // Insertar encabezado
+            const newHeader = document.createElement('th');
+            newHeader.style.width = valueWidth + '%';
+            newHeader.innerHTML = `Valor ${currentColCount}
+                <span class="col-controls">
+                    <button class="btn-col btn-add-col" onclick="addColumnAfter(this)" title="Insertar columna">+</button>
+                    <button class="btn-col btn-delete-col" onclick="deleteColumn(this)" title="Eliminar columna">×</button>
+                </span>`;
+            th.parentNode.insertBefore(newHeader, th.nextSibling);
+            
+            // Actualizar controles de la columna actual si no tiene botón de eliminar
+            const controls = th.querySelector('.col-controls');
+            if (controls && !controls.querySelector('.btn-delete-col')) {
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn-col btn-delete-col';
+                deleteBtn.onclick = function() { deleteColumn(this); };
+                deleteBtn.title = 'Eliminar columna';
+                deleteBtn.textContent = '×';
+                controls.appendChild(deleteBtn);
+            }
+            
+            // Insertar celdas en cada fila
+            tbody.querySelectorAll('tr').forEach(row => {
+                const newCell = document.createElement('td');
+                newCell.className = 'value-col';
+                newCell.innerHTML = '<textarea class="editable-field" rows="1" oninput="autoExpandTextarea(this); autoSave();" placeholder="Valor"></textarea>';
+                const currentCell = row.cells[colIndex];
+                row.insertBefore(newCell, currentCell.nextSibling);
+            });
+            
+            autoSave();
+        }
+        
+        function deleteColumn(button) {
+            const th = button.closest('th');
+            const table = th.closest('table');
+            const thead = table.querySelector('thead tr');
+            const tbody = table.querySelector('tbody');
+            const colIndex = Array.from(thead.cells).indexOf(th);
+            
+            // No eliminar si solo hay 2 columnas (etiqueta + 1 valor)
+            if (thead.cells.length <= 2) {
+                alert('Debe haber al menos una columna de valores');
+                return;
+            }
+            
+            // Eliminar encabezado
+            th.remove();
+            
+            // Eliminar celdas correspondientes
+            tbody.querySelectorAll('tr').forEach(row => {
+                if (row.cells[colIndex]) {
+                    row.cells[colIndex].remove();
+                }
+            });
+            
+            // Recalcular y aplicar proporcionalidad
+            const currentColCount = thead.cells.length;
+            const labelWidth = 25; // 25% para etiquetas
+            const valueWidth = (100 - labelWidth) / (currentColCount - 1);
+            
+            // Ajustar ancho de todas las columnas de valor restantes
+            for (let i = 1; i < thead.cells.length; i++) {
+                thead.cells[i].style.width = valueWidth + '%';
+            }
+            
+            // Renumerar columnas restantes
+            thead.querySelectorAll('th:not(:first-child)').forEach((header, index) => {
+                const text = header.childNodes[0];
+                if (text.textContent.includes('Valor')) {
+                    text.textContent = `Valor ${index + 1}\n                `;
+                }
+            });
+            
+            autoSave();
+        }
+        
+        function autoExpandTextarea(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+        }
+        
+        // ==================== GESTIÓN DE IMÁGENES ====================
+        function addPhoto(gridId) {
+            const fileId = gridId.replace('grid-', 'file-');
+            document.getElementById(fileId).click();
+        }
+        
+        async function handlePhotoUpload(input, gridId) {
+            if (!input.files) return;
+            
+            // Procesar cada archivo y guardar en IndexedDB + base64 para persistencia
+            for (const file of input.files) {
+                try {
+                    // Generar ID único para la imagen
+                    const timestamp = Date.now();
+                    const randomStr = Math.random().toString(36).substring(2, 8);
+                    const imageId = `img_${timestamp}_${randomStr}`;
+                    
+                    // Leer archivo como base64 para persistencia garantizada
+                    const reader = new FileReader();
+                    reader.onload = async function(e) {
+                        const base64Data = e.target.result;
+                        
+                        // Guardar en IndexedDB con base64
+                        await saveImageToIndexedDB(imageId, {
+                            data: base64Data,
+                            type: file.type,
+                            name: file.name,
+                            size: file.size
+                        });
+                        
+                        console.log(`✅ Imagen guardada: ${imageId} (${(file.size/1024).toFixed(2)} KB)`);
+                        
+                        // Agregar imagen al grid
+                        await addImageToGrid(imageId, gridId, imageId);
+                        setTimeout(() => autoSave(), 500);
+                    };
+                    reader.readAsDataURL(file);
+                    
+                } catch (e) {
+                    console.error('Error guardando imagen:', e);
+                    alert(`Error al guardar ${file.name}`);
+                }
+            }
+            
+            input.value = '';
+        }
+        
+        async function addImageToGrid(imageId, gridId, filepath) {
+            const grid = document.getElementById(gridId);
+            const imageItem = document.createElement('div');
+            imageItem.className = 'image-item';
+            imageItem.setAttribute('data-rotation', '0');
+            imageItem.setAttribute('data-scale', '1');
+            imageItem.setAttribute('data-filepath', imageId); // Guardar ID en lugar de filepath
+            imageItem.setAttribute('draggable', 'true');
+            
+            const img = document.createElement('img');
+            
+            // Configurar onload ANTES de asignar src - FORZAR dimensiones
+            img.onload = function() {
+                // Esperar a que la imagen esté completamente cargada
+                setTimeout(() => {
+                    // Preservar proporciones originales, limitar tamaño máximo
+                    const maxWidth = 400;
+                    const maxHeight = 300;
+                    let width = img.naturalWidth || img.width;
+                    let height = img.naturalHeight || img.height;
+                    
+                    // Evitar división por cero
+                    if (width === 0 || height === 0) {
+                        width = 200;
+                        height = 150;
+                    }
+                    
+                    // Calcular escala para ajustar sin deformar
+                    const scale = Math.min(maxWidth / width, maxHeight / height, 1);
+                    
+                    // FORZAR las dimensiones en el contenedor
+                    imageItem.style.width = (width * scale) + 'px';
+                    imageItem.style.height = (height * scale) + 'px';
+                    imageItem.style.display = 'inline-block';
+                }, 10);
+            };
+            
+            // Cargar imagen desde IndexedDB
+            try {
+                const imageData = await loadImageFromIndexedDB(imageId);
+                if (imageData) {
+                    // Si ya está en base64 con prefijo data:, usar directamente
+                    if (typeof imageData.data === 'string' && imageData.data.startsWith('data:')) {
+                        img.src = imageData.data;
+                        console.log(`✅ Imagen cargada (base64 completo): ${imageId} (${(imageData.size/1024).toFixed(2)} KB)`);
+                    } 
+                    // Si es base64 puro sin prefijo, agregar el prefijo
+                    else if (typeof imageData.data === 'string' && !imageData.data.startsWith('data:')) {
+                        const mimeType = imageData.type || 'image/jpeg';
+                        img.src = `data:${mimeType};base64,${imageData.data}`;
+                        console.log(`✅ Imagen cargada (base64 sin prefijo): ${imageId} (${(imageData.size/1024).toFixed(2)} KB)`);
+                    }
+                    // Si es ArrayBuffer, convertir a blob
+                    else if (imageData.data instanceof ArrayBuffer) {
+                        const blob = new Blob([imageData.data], { type: imageData.type || 'image/jpeg' });
+                        const imageUrl = URL.createObjectURL(blob);
+                        img.src = imageUrl;
+                        console.log(`✅ Imagen cargada (blob): ${imageId} (${(imageData.size/1024).toFixed(2)} KB)`);
+                    } else {
+                        console.error('❌ Formato de data desconocido:', typeof imageData.data);
+                        img.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="150"%3E%3Crect fill="%23f00" width="200" height="150"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" fill="%23fff" font-size="12"%3EFormato inválido%3C/text%3E%3C/svg%3E';
+                    }
+                } else {
+                    console.error('❌ Imagen no encontrada en IndexedDB:', imageId);
+                    img.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="150"%3E%3Crect fill="%23ddd" width="200" height="150"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" fill="%23999" font-size="14"%3EImagen no encontrada%3C/text%3E%3C/svg%3E';
+                }
+            } catch (e) {
+                console.error('❌ Error cargando imagen:', e);
+                img.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="150"%3E%3Crect fill="%23f00" width="200" height="150"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" fill="%23fff" font-size="12"%3EError: ' + e.message + '%3C/text%3E%3C/svg%3E';
+            }
+            
+            imageItem.addEventListener('wheel', function(e) {
+                e.preventDefault();
+                const delta = e.deltaY < 0 ? 0.1 : -0.1;
+                zoomImage(imageItem, delta);
+            }, { passive: false });
+            
+            const controls = `
+                <div class="zoom-controls">
+                    <button class="zoom-btn" onclick="zoomImage(this.closest('.image-item'), -0.1)">−</button>
+                    <button class="zoom-btn" onclick="zoomImage(this.closest('.image-item'), 0.1)">+</button>
+                </div>
+                <button class="rotate-btn" onclick="rotateImage(this.closest('.image-item'))">↻</button>
+                <button class="delete-btn" onclick="deleteImage(this.closest('.image-item'))">×</button>
+            `;
+            
+            imageItem.innerHTML = controls;
+            imageItem.appendChild(img);
+            
+            // Verificar que el grid existe antes de agregar
+            if (grid) {
+                grid.appendChild(imageItem);
+                
+                // FORZAR dimensiones inmediatamente si la imagen ya está cargada
+                if (img.complete && img.naturalWidth > 0) {
+                    const maxWidth = 400;
+                    const maxHeight = 300;
+                    let width = img.naturalWidth;
+                    let height = img.naturalHeight;
+                    const scale = Math.min(maxWidth / width, maxHeight / height, 1);
+                    imageItem.style.width = (width * scale) + 'px';
+                    imageItem.style.height = (height * scale) + 'px';
+                    imageItem.style.display = 'inline-block';
+                }
+                
+                autoSave();
+            } else {
+                console.error(`Grid no encontrado: ${gridId}`);
+            }
+        }
+        
+        function zoomImage(imageItem, delta) {
+            const img = imageItem.querySelector('img');
+            let scale = parseFloat(imageItem.getAttribute('data-scale')) || 1;
+            scale = Math.max(0.1, Math.min(3, scale + delta));
+            imageItem.setAttribute('data-scale', scale);
+            
+            // Mantener proporción de aspecto
+            const width = img.naturalWidth * scale;
+            const height = img.naturalHeight * scale;
+            imageItem.style.width = width + 'px';
+            imageItem.style.height = height + 'px';
+            autoSave();
+        }
+        
+        function rotateImage(imageItem) {
+            const img = imageItem.querySelector('img');
+            let rotation = parseInt(imageItem.getAttribute('data-rotation')) || 0;
+            rotation = (rotation + 90) % 360;
+            imageItem.setAttribute('data-rotation', rotation);
+            img.style.transform = `rotate(${rotation}deg)`;
+            
+            // Intercambiar width/height cuando la rotación es 90° o 270°
+            if (rotation === 90 || rotation === 270) {
+                // Obtener dimensiones originales (antes de la rotación)
+                const currentWidth = parseFloat(imageItem.style.width);
+                const currentHeight = parseFloat(imageItem.style.height);
+                
+                // Intercambiar dimensiones
+                imageItem.style.width = currentHeight + 'px';
+                imageItem.style.height = currentWidth + 'px';
+            } else if (rotation === 0 || rotation === 180) {
+                // Restaurar proporciones originales
+                const scale = parseFloat(imageItem.getAttribute('data-scale')) || 1;
+                const maxWidth = 400;
+                const maxHeight = 300;
+                let width = img.naturalWidth || 200;
+                let height = img.naturalHeight || 150;
+                const scaleRatio = Math.min(maxWidth / width, maxHeight / height, 1);
+                imageItem.style.width = (width * scaleRatio * scale) + 'px';
+                imageItem.style.height = (height * scaleRatio * scale) + 'px';
+            }
+            
+            autoSave();
+        }
+        
+        async function deleteImage(imageItem) {
+            if (confirm('¿Eliminar esta imagen?')) {
+                // Obtener ID de la imagen para eliminar de IndexedDB
+                const imageId = imageItem.getAttribute('data-filepath');
+                if (imageId) {
+                    await deleteImageFromIndexedDB(imageId);
+                    console.log(`🗑️ Imagen eliminada de IndexedDB: ${imageId}`);
+                }
+                imageItem.remove();
+                autoSave();
+            }
+        }
+        
+        // ==================== GUARDAR Y CARGAR DATOS ====================
+        function autoSave() {
+            clearTimeout(saveTimeout);
+            hasUnsavedChanges = true;
+            const status = document.getElementById('save-status');
+            status.textContent = '💾 Guardando...';
+            status.className = 'save-status show';
+            
+            saveTimeout = setTimeout(function() {
+                saveAllData();
+                hasUnsavedChanges = false;
+                status.textContent = '✓ Guardado';
+                status.className = 'save-status saved show';
+                setTimeout(() => status.classList.remove('show'), 1500);
+            }, 1000);
+        }
+        
+        function saveAllData() {
+            const data = { cintas: [], timestamp: new Date().toISOString() };
+            document.querySelectorAll('.cinta-section').forEach((section, index) => {
+                const cintaData = {
+                    id: section.getAttribute('data-cinta-id'),
+                    area: section.querySelector('.area-field').value,
+                    titulo: section.querySelector('.cinta-title-editable').value,
+                    tablas: [],
+                    imagenes: {}
+                };
+                
+                // Guardar tablas con soporte multi-columna
+                section.querySelectorAll('table').forEach(table => {
+                    const tableData = { 
+                        tipo: table.getAttribute('data-table-id'), 
+                        headers: [],
+                        filas: [] 
+                    };
+                    
+                    // Guardar encabezados
+                    table.querySelectorAll('thead th').forEach(th => {
+                        const headerText = th.childNodes[0] ? th.childNodes[0].textContent.trim() : th.textContent.trim();
+                        tableData.headers.push(headerText);
+                    });
+                    
+                    // Guardar filas
+                    table.querySelectorAll('tbody tr').forEach(row => {
+                        const rowData = { label: row.querySelector('.label-col').textContent, valores: [] };
+                        row.querySelectorAll('.editable-field').forEach(field => {
+                            rowData.valores.push(field.value);
+                        });
+                        tableData.filas.push(rowData);
+                    });
+                    cintaData.tablas.push(tableData);
+                });
+                
+                // Guardar imágenes (solo rutas, NO base64)
+                ['banda', 'motor'].forEach(tipo => {
+                    const grid = section.querySelector(`#grid-${cintaData.id}-${tipo}`);
+                    if (grid) {
+                        cintaData.imagenes[tipo] = Array.from(grid.querySelectorAll('.image-item')).map(item => {
+                            return {
+                                filepath: item.getAttribute('data-filepath'), // Solo la ruta
+                                rotation: item.getAttribute('data-rotation'),
+                                scale: item.getAttribute('data-scale'),
+                                width: item.style.width,
+                                height: item.style.height
+                            };
+                        });
+                    }
+                });
+                
+                data.cintas.push(cintaData);
+            });
+            
+            try {
+                localStorage.setItem('cintasPlantaDataMejorado', JSON.stringify(data));
+                console.log('✅ Datos guardados:', data.cintas.length, 'cintas');
+            } catch (e) {
+                console.error('Error al guardar:', e);
+                if (e.name === 'QuotaExceededError') {
+                    alert('⚠️ Espacio insuficiente en localStorage.\n\nSolución: Las imágenes están en IndexedDB (sin límite), solo faltan los textos.\n\nPrueba:\n1. Exportar a Excel/PDF para backup\n2. Eliminar cintas antiguas que no uses\n3. Los datos de texto son muy pequeños, debería funcionar');
+                } else {
+                    alert('Error al guardar datos: ' + e.message);
+                }
+            }
+        }
+        
+        function saveAllDataManually() {
+            saveAllData();
+            showSaveStatus('✅ Datos guardados correctamente', true);
+        }
+        
+        function clearSavedData() {
+            if (confirm('¿Eliminar TODOS los datos? Esta acción no se puede deshacer.')) {
+                localStorage.removeItem('cintasPlantaDataMejorado');
+                location.reload();
+            }
+        }
+        
+        // ==================== PERSONALIZACIÓN DE COLORES ====================
+        function updateColors() {
+            const primaryColor = document.getElementById('color-primary').value;
+            const areaColor = document.getElementById('color-area').value;
+            const headerColor = document.getElementById('color-header').value;
+            
+            // Actualizar variables CSS
+            document.documentElement.style.setProperty('--color-primary', primaryColor);
+            document.documentElement.style.setProperty('--color-area', areaColor);
+            document.documentElement.style.setProperty('--color-header', headerColor);
+            
+            // Actualizar elementos dinámicamente
+            document.querySelectorAll('.area-field').forEach(el => {
+                el.style.background = `linear-gradient(135deg, ${areaColor} 0%, ${shadeColor(areaColor, -20)} 100%)`;
+            });
+            
+            document.querySelectorAll('.section-subtitle').forEach(el => {
+                el.style.background = `linear-gradient(135deg, ${primaryColor} 0%, ${shadeColor(primaryColor, -20)} 100%)`;
+            });
+            
+            document.querySelector('.export-buttons').style.background = `linear-gradient(135deg, ${headerColor} 0%, ${shadeColor(headerColor, -20)} 100%)`;
+            
+            document.querySelectorAll('.btn-primary, .btn-add-section').forEach(el => {
+                el.style.background = `linear-gradient(135deg, ${primaryColor} 0%, ${shadeColor(primaryColor, -20)} 100%)`;
+            });
+            
+            // Guardar colores personalizados
+            localStorage.setItem('customColors', JSON.stringify({
+                primary: primaryColor,
+                area: areaColor,
+                header: headerColor
+            }));
+            
+            autoSave();
+        }
+        
+        function shadeColor(color, percent) {
+            const num = parseInt(color.replace("#", ""), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = (num >> 16) + amt;
+            const G = (num >> 8 & 0x00FF) + amt;
+            const B = (num & 0x0000FF) + amt;
+            return "#" + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+                (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+                (B < 255 ? B < 1 ? 0 : B : 255))
+                .toString(16).slice(1);
+        }
+        
+        function resetColors() {
+            document.getElementById('color-primary').value = '#5499c7';
+            document.getElementById('color-area').value = '#85929e';
+            document.getElementById('color-header').value = '#34495e';
+            localStorage.removeItem('customColors');
+            updateColors();
+        }
+        
+        function loadCustomColors() {
+            const saved = localStorage.getItem('customColors');
+            if (saved) {
+                const colors = JSON.parse(saved);
+                document.getElementById('color-primary').value = colors.primary;
+                document.getElementById('color-area').value = colors.area;
+                document.getElementById('color-header').value = colors.header;
+                updateColors();
+            }
+        }
+        
+        async function loadSavedData() {
+            const savedData = localStorage.getItem('cintasPlantaDataMejorado');
+            if (!savedData) {
+                // Crear 3 cintas de ejemplo
+                for (let i = 1; i <= 3; i++) {
+                    const section = createCintaSection(i, `CINTA ${i} - Ejemplo`);
+                    document.getElementById('cintas-container').appendChild(section);
+                }
+                cintaCounter = 3;
+                return;
+            }
+            
+            try {
+                const data = JSON.parse(savedData);
+                const container = document.getElementById('cintas-container');
+                container.innerHTML = '';
+                
+                data.cintas.forEach(cintaData => {
+                    const section = createCintaSection(cintaData.id, cintaData.titulo, cintaData.area || '');
+                    
+                    // Restaurar área si existe en datos antiguos sin este campo
+                    if (cintaData.area) {
+                        const areaField = section.querySelector('.area-field');
+                        if (areaField) areaField.value = cintaData.area;
+                    }
+                    
+                    // Restaurar tablas con soporte multi-columna
+                    cintaData.tablas.forEach(tableData => {
+                        const tableElement = section.querySelector(`[data-table-id="${tableData.tipo}"]`);
+                        if (tableElement) {
+                            const thead = tableElement.querySelector('thead tr');
+                            const tbody = tableElement.querySelector('tbody');
+                            
+                            // Restaurar encabezados si existen
+                            if (tableData.headers && tableData.headers.length > 1) {
+                                thead.innerHTML = '';
+                                tableData.headers.forEach((header, index) => {
+                                    const th = document.createElement('th');
+                                    if (index === 0) {
+                                        th.style.width = '25%';
+                                        th.textContent = header;
+                                    } else {
+                                        th.innerHTML = `${header}
+                                            <span class="col-controls">
+                                                <button class="btn-col btn-add-col" onclick="addColumnAfter(this)" title="Insertar columna">+</button>
+                                                ${tableData.headers.length > 2 ? '<button class="btn-col btn-delete-col" onclick="deleteColumn(this)" title="Eliminar columna">×</button>' : ''}
+                                            </span>`;
+                                    }
+                                    thead.appendChild(th);
+                                });
+                            }
+                            
+                            // Restaurar filas
+                            tbody.innerHTML = '';
+                            tableData.filas.forEach(fila => {
+                                const row = document.createElement('tr');
+                                let rowHTML = `<td class="label-col" contenteditable="true" oninput="autoSave()">${fila.label}</td>`;
+                                
+                                const valores = fila.valores || [fila.value]; // Compatibilidad con formato antiguo
+                                valores.forEach((valor, index) => {
+                                    rowHTML += `
+                                        <td class="value-col">
+                                            <textarea class="editable-field" rows="1" oninput="autoExpandTextarea(this); autoSave();">${valor || ''}</textarea>
+                                            ${index === 0 ? `<div class="row-controls">
+                                                <button class="btn-row btn-add-row" onclick="insertRowAfter(this)">+</button>
+                                                <button class="btn-row btn-delete-row" onclick="deleteRow(this)">×</button>
+                                            </div>` : ''}
+                                        </td>
+                                    `;
+                                });
+                                
+                                row.innerHTML = rowHTML;
+                                tbody.appendChild(row);
+                                row.querySelectorAll('.editable-field').forEach(autoExpandTextarea);
+                            });
+                        }
+                    });
+                    
+                    // Agregar sección al DOM primero
+                    container.appendChild(section);
+                    
+                    // Restaurar imágenes después de que el DOM esté listo
+                    setTimeout(() => {
+                        Object.keys(cintaData.imagenes || {}).forEach(async tipo => {
+                            const gridId = `grid-${cintaData.id}-${tipo}`;
+                            const grid = document.getElementById(gridId);
+                            
+                            if (!grid) {
+                                console.error(`Grid no encontrado al restaurar: ${gridId}`);
+                                return;
+                            }
+                            
+                            for (const imgData of cintaData.imagenes[tipo]) {
+                                if (imgData.filepath) {
+                                    await addImageToGrid(imgData.filepath, gridId, imgData.filepath);
+                                    
+                                    // Esperar un frame para que la imagen esté en el DOM
+                                    await new Promise(resolve => setTimeout(resolve, 50));
+                                    
+                                    // Restaurar propiedades adicionales
+                                    const imageItem = grid.lastElementChild;
+                                    if (imageItem) {
+                                        imageItem.setAttribute('data-rotation', imgData.rotation || '0');
+                                        imageItem.setAttribute('data-scale', imgData.scale || '1');
+                                        
+                                        // Restaurar dimensiones personalizadas si existen
+                                        if (imgData.width) {
+                                            imageItem.style.width = imgData.width;
+                                        }
+                                        if (imgData.height) {
+                                            imageItem.style.height = imgData.height;
+                                        }
+                                        
+                                        // Aplicar rotación si existe
+                                        const rotation = parseInt(imgData.rotation || '0');
+                                        if (rotation !== 0) {
+                                            const img = imageItem.querySelector('img');
+                                            if (img) img.style.transform = `rotate(${rotation}deg)`;
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }, 100);
+                    cintaCounter = Math.max(cintaCounter, parseInt(cintaData.id));
+                });
+                
+                console.log('✅ Datos cargados:', data.cintas.length, 'cintas');
+            } catch (e) {
+                console.error('Error al cargar datos:', e);
+            }
+        }
+        
+        // ==================== EXPORTACIÓN A PDF PROFESIONAL ====================
+        function showPDFOptions() {
+            const quality = document.getElementById('pdf-quality').value;
+            const imageSize = document.getElementById('pdf-image-size').value;
+            const settings = pdfQualitySettings[quality];
+            
+            const sizeMM = imageSize === 'small' ? 60 : imageSize === 'medium' ? 85 : imageSize === 'large' ? 110 : 140;
+            const sizeEstimate = quality === 'ultra' ? '15-30 MB' : quality === 'high' ? '8-15 MB' : quality === 'medium' ? '4-8 MB' : '2-4 MB';
+            
+            if (confirm(`Exportar PDF\\n\\nCalidad: ${quality.toUpperCase()} (${Math.round(settings.quality*100)}% JPEG)\\nTamaño imágenes: ${sizeMM}mm (2 por fila)\\nResolución: ${settings.scale}x\\nTodas las imágenes incluidas\\nTamaño estimado: ${sizeEstimate}\\n\\n¿Continuar?`)) {
+                exportToPDFProfessional();
+            }
+        }
+        
+        async function exportToPDFProfessional() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            
+            // Obtener configuración de calidad y tamaño
+            const qualityLevel = document.getElementById('pdf-quality').value;
+            const imageSize = document.getElementById('pdf-image-size').value;
+            const qualitySettings = pdfQualitySettings[qualityLevel];
+            
+            // Tamaño de imagen según selección del usuario
+            const imageSizeMM = imageSize === 'small' ? 60 : imageSize === 'medium' ? 85 : imageSize === 'large' ? 110 : 140;
+            
+            showSaveStatus(`⏳ Generando PDF (${qualityLevel}, ${imageSizeMM}mm)...`, false);
+            
+            // Ocultar controles temporalmente
+            document.querySelectorAll('.export-buttons, .btn-small, .cinta-controls, .row-controls, .col-controls, .delete-btn, .rotate-btn, .zoom-controls, .add-photo-btn').forEach(el => {
+                el.style.display = 'none';
+            });
+            
+            let yPosition = 20;
+            let firstPage = true;
+            
+            // Encabezado
+            doc.setFontSize(18);
+            doc.setFont(undefined, 'bold');
+            doc.text('INFORME TECNICO - CINTAS TRANSPORTADORAS', 105, yPosition, { align: 'center' });
+            yPosition += 8;
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            const fecha = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            doc.text(`Fecha: ${fecha}`, 105, yPosition, { align: 'center' });
+            yPosition += 15;
+            
+            // Procesar cada cinta
+            const sections = document.querySelectorAll('.cinta-section');
+            
+            for (let i = 0; i < sections.length; i++) {
+                const section = sections[i];
+                const area = section.querySelector('.area-field').value;
+                const title = section.querySelector('.cinta-title-editable').value;
+                
+                // Nueva página si no es la primera cinta
+                if (i > 0) {
+                    doc.addPage();
+                    yPosition = 20;
+                }
+                
+                // Mostrar área si existe
+                if (area && area.trim() !== '') {
+                    doc.setFillColor(133, 146, 158);
+                    doc.roundedRect(10, yPosition, 50, 7, 2, 2, 'F');
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFontSize(9);
+                    doc.setFont(undefined, 'bold');
+                    doc.text(area.toUpperCase(), 12, yPosition + 4.5);
+                    yPosition += 10;
+                    doc.setTextColor(0, 0, 0);
+                }
+                
+                // Título de cinta
+                doc.setFillColor(52, 73, 94);
+                doc.rect(10, yPosition, 190, 8, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(12);
+                doc.setFont(undefined, 'bold');
+                doc.text(title, 15, yPosition + 5.5);
+                yPosition += 12;
+                doc.setTextColor(0, 0, 0);
+                
+                // Procesar tablas
+                const tables = section.querySelectorAll('table');
+                for (const table of tables) {
+                    const isMotor = table.classList.contains('table-motor');
+                    const subtitle = isMotor ? 'MOTORREDUCTOR' : 'ESPECIFICACIONES DE BANDA';
+                    
+                    doc.setFontSize(11);
+                    doc.setFont(undefined, 'bold');
+                    doc.text(subtitle, 15, yPosition);
+                    yPosition += 6;
+                    
+                    const tableData = [];
+                    const headers = [];
+                    
+                    // Obtener encabezados
+                    table.querySelectorAll('thead th').forEach(th => {
+                        const text = th.textContent.split('\n')[0].trim();
+                        headers.push(text);
+                    });
+                    
+                    // Obtener datos
+                    table.querySelectorAll('tbody tr').forEach(row => {
+                        const rowData = [row.querySelector('.label-col').textContent.trim()];
+                        row.querySelectorAll('.editable-field').forEach(field => {
+                            rowData.push(field.value || '');
+                        });
+                        tableData.push(rowData);
+                    });
+                    
+                    // Calcular anchos
+                    const totalWidth = 180;
+                    const labelWidth = 50;
+                    const valueWidth = (totalWidth - labelWidth) / (headers.length - 1);
+                    const columnStyles = { 0: { cellWidth: labelWidth, fontStyle: 'bold', fillColor: [248, 249, 250] } };
+                    for (let j = 1; j < headers.length; j++) {
+                        columnStyles[j] = { cellWidth: valueWidth };
+                    }
+                    
+                    doc.autoTable({
+                        startY: yPosition,
+                        head: [headers],
+                        body: tableData,
+                        theme: 'grid',
+                        styles: { fontSize: 9, cellPadding: 3, lineColor: [220, 220, 220], lineWidth: 0.1 },
+                        headStyles: { fillColor: [189, 195, 199], textColor: [44, 62, 80], fontStyle: 'bold', fontSize: 9 },
+                        columnStyles: columnStyles,
+                        margin: { left: 15, right: 15 }
+                    });
+                    
+                    yPosition = doc.lastAutoTable.finalY + 8;
+                }
+                
+                // Agregar imágenes
+                const grids = section.querySelectorAll('.image-grid');
+                for (const grid of grids) {
+                    const images = grid.querySelectorAll('.image-item img');
+                    if (images.length > 0) {
+                        const gridType = grid.id.includes('banda') ? 'Banda y Sprockets' : 'Motorreductor';
+                        
+                        if (yPosition > 220) {
+                            doc.addPage();
+                            yPosition = 20;
+                        }
+                        
+                        doc.setFontSize(10);
+                        doc.setFont(undefined, 'bold');
+                        doc.text(`Imagenes - ${gridType}`, 15, yPosition);
+                        yPosition += 5;
+                        
+                        let xPos = 15;
+                        let rowHeight = 0;
+                        let imagesInRow = 0;
+                        const maxImagesPerRow = 2; // Máximo 2 imágenes por fila para que se vean más grandes
+                        
+                        for (let j = 0; j < images.length; j++) { // Mostrar TODAS las imágenes
+                            try {
+                                const img = images[j];
+                                const canvas = document.createElement('canvas');
+                                const ctx = canvas.getContext('2d');
+                                
+                                // Esperar a que la imagen cargue
+                                await new Promise((resolve) => {
+                                    if (img.complete) {
+                                        resolve();
+                                    } else {
+                                        img.onload = resolve;
+                                        setTimeout(resolve, 100);
+                                    }
+                                });
+                                
+                                // Dimensiones máximas en el PDF (en mm) - según selección del usuario
+                                const maxDisplayW = imageSizeMM;
+                                const maxDisplayH = Math.floor(imageSizeMM * 0.75); // Mantener proporción razonable
+                                
+                                // Obtener dimensiones originales de la imagen
+                                let originalW = img.naturalWidth || img.width;
+                                let originalH = img.naturalHeight || img.height;
+                                
+                                // Calcular dimensiones de visualización en PDF manteniendo proporción
+                                let displayW = originalW;
+                                let displayH = originalH;
+                                const ratio = Math.min(maxDisplayW / originalW, maxDisplayH / originalH);
+                                displayW = Math.floor(originalW * ratio);
+                                displayH = Math.floor(originalH * ratio);
+                                
+                                // Usar resolución configurada
+                                const scale = qualitySettings.scale;
+                                const canvasW = displayW * scale;
+                                const canvasH = displayH * scale;
+                                
+                                canvas.width = canvasW;
+                                canvas.height = canvasH;
+                                
+                                // Fondo blanco
+                                ctx.fillStyle = 'white';
+                                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                                
+                                // Configurar alta calidad de renderizado
+                                ctx.imageSmoothingEnabled = true;
+                                ctx.imageSmoothingQuality = 'high';
+                                
+                                // Dibujar la imagen en el canvas con la resolución aumentada
+                                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                                
+                                // Convertir a JPEG con calidad configurada
+                                const imgData = canvas.toDataURL('image/jpeg', qualitySettings.quality);
+                                
+                                // Salto de fila si no cabe o si ya hay 2 imágenes
+                                if (xPos + displayW > 185 || imagesInRow >= maxImagesPerRow) {
+                                    xPos = 15;
+                                    yPosition += rowHeight + 5;
+                                    rowHeight = 0;
+                                    imagesInRow = 0;
+                                    
+                                    // Nueva página si no cabe
+                                    if (yPosition + displayH > 270) {
+                                        doc.addPage();
+                                        yPosition = 20;
+                                        xPos = 15;
+                                    }
+                                }
+                                
+                                doc.addImage(imgData, 'JPEG', xPos, yPosition, displayW, displayH);
+                                rowHeight = Math.max(rowHeight, displayH);
+                                xPos += displayW + 5;
+                                imagesInRow++;
+                                
+                            } catch (e) {
+                                console.error('Error con imagen:', e);
+                            }
+                        }
+                        
+                        yPosition += rowHeight + 8;
+                    }
+                }
+            }
+            
+            // Pie de página
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(150, 150, 150);
+                doc.text(`Pagina ${i} de ${pageCount}`, 105, 290, { align: 'center' });
+            }
+            
+            // Restaurar controles
+            document.querySelectorAll('.export-buttons, .btn-small, .cinta-controls, .row-controls, .col-controls, .delete-btn, .rotate-btn, .zoom-controls, .add-photo-btn').forEach(el => {
+                el.style.display = '';
+            });
+            
+            doc.save(`Informe_Cintas_${fecha.replace(/\//g, '-')}.pdf`);
+            showSaveStatus('✅ PDF generado correctamente', true);
+        }
+        
+        // ==================== EXPORTAR/IMPORTAR DATOS COMPLETOS CON IMÁGENES ====================
+        async function exportDataWithImages() {
+            showSaveStatus('⏳ Exportando datos e imágenes...', false);
+            
+            try {
+                // Obtener datos de texto de localStorage
+                const textData = localStorage.getItem('cintasPlantaDataMejorado');
+                if (!textData) {
+                    alert('No hay datos para exportar');
+                    return;
+                }
+                
+                // Obtener todas las imágenes de IndexedDB
+                const db = await openDatabase();
+                const imageIds = [];
+                const imagesData = {};
+                
+                // Recopilar IDs de imágenes de los datos
+                const parsedData = JSON.parse(textData);
+                parsedData.cintas.forEach(cinta => {
+                    Object.values(cinta.imagenes || {}).forEach(imageArray => {
+                        imageArray.forEach(img => {
+                            if (img.filepath) {
+                                imageIds.push(img.filepath);
+                            }
+                        });
+                    });
+                });
+                
+                // Obtener datos de cada imagen
+                for (const imageId of imageIds) {
+                    const imageData = await loadImageFromIndexedDB(imageId);
+                    if (imageData) {
+                        let base64Data;
+                        
+                        // Si ya está en base64 completo (con data:image...)
+                        if (typeof imageData.data === 'string' && imageData.data.startsWith('data:')) {
+                            base64Data = imageData.data;
+                        } 
+                        // Si es base64 puro (sin prefijo data:)
+                        else if (typeof imageData.data === 'string') {
+                            // Ya es base64, solo agregar prefijo para el JSON
+                            const mimeType = imageData.type || 'image/jpeg';
+                            base64Data = `data:${mimeType};base64,${imageData.data}`;
+                        }
+                        // Si es ArrayBuffer
+                        else if (imageData.data instanceof ArrayBuffer) {
+                            const base64 = arrayBufferToBase64(imageData.data);
+                            const mimeType = imageData.type || 'image/jpeg';
+                            base64Data = `data:${mimeType};base64,${base64}`;
+                        }
+                        else {
+                            console.error('Formato de imagen desconocido:', imageId, typeof imageData.data);
+                            continue;
+                        }
+                        
+                        imagesData[imageId] = {
+                            data: base64Data,
+                            type: imageData.type,
+                            name: imageData.name,
+                            size: imageData.size
+                        };
+                        console.log(`📦 Empaquetada: ${imageId} (${(imageData.size/1024).toFixed(2)} KB)`);
+                    } else {
+                        console.warn(`⚠️ Imagen no encontrada: ${imageId}`);
+                    }
+                }
+                
+                // Crear objeto completo
+                const completeData = {
+                    version: '3.0.0',
+                    exported: new Date().toISOString(),
+                    textData: parsedData,
+                    images: imagesData,
+                    imageCount: Object.keys(imagesData).length
+                };
+                
+                // Descargar como JSON
+                const blob = new Blob([JSON.stringify(completeData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `CintasPlanta_Completo_${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                showSaveStatus(`✅ Exportado: ${parsedData.cintas.length} cintas, ${Object.keys(imagesData).length} imágenes`, true);
+            } catch (e) {
+                console.error('Error exportando:', e);
+                alert('Error al exportar datos: ' + e.message);
+            }
+        }
+        
+        async function importDataWithImages(input) {
+            if (!input.files || !input.files[0]) return;
+            
+            if (!confirm('⚠️ ADVERTENCIA: Esto REEMPLAZARÁ todos los datos actuales.\n\n¿Estás seguro de continuar?')) {
+                input.value = '';
+                return;
+            }
+            
+            showSaveStatus('⏳ Importando datos e imágenes...', false);
+            
+            try {
+                const file = input.files[0];
+                const text = await file.text();
+                const completeData = JSON.parse(text);
+                
+                // Validar formato
+                if (!completeData.textData || !completeData.images) {
+                    alert('Archivo inválido. Debe ser un archivo exportado por esta aplicación.');
+                    return;
+                }
+                
+                // Guardar imágenes en IndexedDB
+                let importedImages = 0;
+                for (const [imageId, imageData] of Object.entries(completeData.images)) {
+                    try {
+                        // Guardar directamente el base64 (más confiable)
+                        await saveImageToIndexedDB(imageId, {
+                            data: imageData.data, // Ya es base64
+                            type: imageData.type,
+                            name: imageData.name,
+                            size: imageData.size
+                        });
+                        importedImages++;
+                    } catch (e) {
+                        console.error('Error importando imagen:', imageId, e);
+                    }
+                }
+                
+                // Guardar datos de texto en localStorage
+                localStorage.setItem('cintasPlantaDataMejorado', JSON.stringify(completeData.textData));
+                
+                // Recargar página
+                showSaveStatus(`✅ Importado: ${completeData.textData.cintas.length} cintas, ${importedImages} imágenes`, true);
+                setTimeout(() => location.reload(), 1500);
+                
+            } catch (e) {
+                console.error('Error importando:', e);
+                alert('Error al importar datos: ' + e.message);
+            }
+            
+            input.value = '';
+        }
+        
+        // Funciones auxiliares para conversión base64
+        function arrayBufferToBase64(buffer) {
+            let binary = '';
+            const bytes = new Uint8Array(buffer);
+            const len = bytes.byteLength;
+            for (let i = 0; i < len; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return window.btoa(binary);
+        }
+        
+        function base64ToArrayBuffer(base64) {
+            const binaryString = window.atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+        
+        function exportToExcel() {
+            const wb = XLSX.utils.book_new();
+            document.querySelectorAll('.cinta-section').forEach((section, index) => {
+                const data = [];
+                
+                // Área y título
+                const area = section.querySelector('.area-field').value;
+                const title = section.querySelector('.cinta-title-editable').value;
+                if (area) data.push([area]);
+                data.push([title]);
+                data.push([]);
+                
+                // Procesar cada tabla con soporte multi-columna
+                section.querySelectorAll('table').forEach(table => {
+                    // Obtener encabezados
+                    const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim().split('\n')[0]);
+                    data.push(headers);
+                    
+                    // Obtener filas con todas las columnas
+                    table.querySelectorAll('tbody tr').forEach(row => {
+                        const rowData = [];
+                        rowData.push(row.querySelector('.label-col').textContent.trim());
+                        
+                        // Obtener todos los valores de las columnas
+                        row.querySelectorAll('.value-col .editable-field').forEach(field => {
+                            rowData.push(field.value);
+                        });
+                        
+                        data.push(rowData);
+                    });
+                    data.push([]);
+                });
+                
+                const ws = XLSX.utils.aoa_to_sheet(data);
+                XLSX.utils.book_append_sheet(wb, ws, `Cinta ${index + 1}`);
+            });
+            
+            XLSX.writeFile(wb, 'Informe_Cintas_Transportadoras.xlsx');
+            showSaveStatus('✅ Excel exportado correctamente', true);
+        }
+        
+        // ==================== INICIALIZACIÓN ====================
+        window.addEventListener('DOMContentLoaded', async function() {
+            // Detectar si Tracking Prevention está activo
+            try {
+                localStorage.setItem('test', 'test');
+                localStorage.removeItem('test');
+            } catch (e) {
+                alert('⚠️ TRACKING PREVENTION DETECTADO\n\n' +
+                      'Tu navegador está bloqueando el almacenamiento local.\n\n' +
+                      'SOLUCIÓN para Microsoft Edge:\n' +
+                      '1. Haz clic en el icono de escudo 🛡️ en la barra de direcciones\n' +
+                      '2. Desactiva "Prevención de seguimiento para este sitio"\n' +
+                      '3. Recarga la página (F5)\n\n' +
+                      'O usa Chrome/Firefox sin tracking prevention.');
+                console.error('⚠️ Tracking Prevention bloqueando almacenamiento');
+            }
+            
+            await loadSavedData();
+            loadCustomColors(); // Cargar colores personalizados
+            
+            // Auto-expandir textareas existentes
+            document.querySelectorAll('.editable-field').forEach(autoExpandTextarea);
+            
+            console.log('✅ Sistema inicializado con IndexedDB');
+            console.log('📦 Las imágenes se guardan automáticamente en tu navegador');
+            console.log('💾 Textos en localStorage, Imágenes en IndexedDB (sin límite)');
+            console.log('🎯 Selector de calidad PDF disponible');
+        });
+        
+        window.addEventListener('beforeunload', function(e) {
+            if (hasUnsavedChanges) {
+                clearTimeout(saveTimeout);
+                saveAllData();
+            }
+        });
+    </script>
+</body>
+</html>

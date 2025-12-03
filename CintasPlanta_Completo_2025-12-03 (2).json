@@ -1,0 +1,721 @@
+{
+  "version": "3.0.0",
+  "exported": "2025-12-03T01:16:23.714Z",
+  "textData": {
+    "cintas": [
+      {
+        "id": "1",
+        "area": "FILETE",
+        "titulo": "CINTA 1 - DESPERDICIO BAADER 200",
+        "tablas": [
+          {
+            "tipo": "banda-1",
+            "headers": [
+              "Campo",
+              "Valor"
+            ],
+            "filas": [
+              {
+                "label": "Tipo de banda",
+                "valores": [
+                  ""
+                ]
+              },
+              {
+                "label": "Material",
+                "valores": [
+                  ""
+                ]
+              },
+              {
+                "label": "Ancho",
+                "valores": [
+                  "500 mm"
+                ]
+              },
+              {
+                "label": "Largo",
+                "valores": [
+                  ""
+                ]
+              },
+              {
+                "label": "Varillas",
+                "valores": [
+                  ""
+                ]
+              },
+              {
+                "label": "Notas",
+                "valores": [
+                  ""
+                ]
+              }
+            ]
+          },
+          {
+            "tipo": "motor-1",
+            "headers": [
+              "Campo",
+              "Valor"
+            ],
+            "filas": [
+              {
+                "label": "Marca / Modelo",
+                "valores": [
+                  "SA47/TDRN80M4"
+                ]
+              },
+              {
+                "label": "Potencia",
+                "valores": [
+                  "0.75 KW"
+                ]
+              },
+              {
+                "label": "Voltaje",
+                "valores": [
+                  "220 D/380 Y volt"
+                ]
+              },
+              {
+                "label": "RPM Motor / Salida",
+                "valores": [
+                  "1440/44 rpm"
+                ]
+              },
+              {
+                "label": "Corriente nominal",
+                "valores": [
+                  "3.20 / 1.84 amp"
+                ]
+              },
+              {
+                "label": "Número de serie",
+                "valores": [
+                  ""
+                ]
+              },
+              {
+                "label": "Relación reducción (i)",
+                "valores": [
+                  "32.48"
+                ]
+              }
+            ]
+          }
+        ],
+        "imagenes": {
+          "banda": [
+            {
+              "filepath": "img_1764721857426_rqrr7q",
+              "rotation": "0",
+              "scale": "0.2",
+              "width": "256px",
+              "height": "144px"
+            },
+            {
+              "filepath": "img_1764721857454_7dsz14",
+              "rotation": "0",
+              "scale": "0.30000000000000016",
+              "width": "216px",
+              "height": "384px"
+            },
+            {
+              "filepath": "img_1764721857463_38avs6",
+              "rotation": "0",
+              "scale": "0.30000000000000016",
+              "width": "360px",
+              "height": "480px"
+            }
+          ],
+          "motor": [
+            {
+              "filepath": "img_1764721869047_6vsp85",
+              "rotation": "0",
+              "scale": "0.20000000000000015",
+              "width": "256px",
+              "height": "144px"
+            },
+            {
+              "filepath": "img_1764721869064_yp78k0",
+              "rotation": "0",
+              "scale": "1",
+              "width": "400px",
+              "height": "225px"
+            }
+          ]
+        }
+      },
+      {
+        "id": "2",
+        "area": "FILETE",
+        "titulo": "CINTA 2 - DESPERDICIO PIMPONEO",
+        "tablas": [
+          {
+            "tipo": "banda-2",
+            "headers": [
+              "Campo",
+              "Valor"
+            ],
+            "filas": [
+              {
+                "label": "Tipo de banda",
+                "valores": [
+                  ""
+                ]
+              },
+              {
+                "label": "Material",
+                "valores": [
+                  ""
+                ]
+              },
+              {
+                "label": "Ancho",
+                "valores": [
+                  "300 mm"
+                ]
+              },
+              {
+                "label": "Largo",
+                "valores": [
+                  "25 mts"
+                ]
+              },
+              {
+                "label": "Varillas",
+                "valores": [
+                  ""
+                ]
+              },
+              {
+                "label": "Notas",
+                "valores": [
+                  ""
+                ]
+              }
+            ]
+          },
+          {
+            "tipo": "motor-2",
+            "headers": [
+              "Campo",
+              "Valor"
+            ],
+            "filas": [
+              {
+                "label": "Marca / Modelo",
+                "valores": [
+                  "SA47/TDRN80M4"
+                ]
+              },
+              {
+                "label": "Potencia",
+                "valores": [
+                  "0.75 KW"
+                ]
+              },
+              {
+                "label": "Voltaje",
+                "valores": [
+                  "220 D/380 Y volt"
+                ]
+              },
+              {
+                "label": "RPM Motor / Salida",
+                "valores": [
+                  "1440/44 rpm"
+                ]
+              },
+              {
+                "label": "Corriente nominal",
+                "valores": [
+                  "3.20 / 1.84 amp"
+                ]
+              },
+              {
+                "label": "Número de serie",
+                "valores": [
+                  ""
+                ]
+              },
+              {
+                "label": "Relación reducción (i)",
+                "valores": [
+                  "32.48"
+                ]
+              }
+            ]
+          }
+        ],
+        "imagenes": {
+          "banda": [
+            {
+              "filepath": "img_1764722045775_ndbhus",
+              "rotation": "0",
+              "scale": "1",
+              "width": "400px",
+              "height": "225px"
+            },
+            {
+              "filepath": "img_1764722045790_qx7338",
+              "rotation": "0",
+              "scale": "1",
+              "width": "168.75px",
+              "height": "300px"
+            },
+            {
+              "filepath": "img_1764722045802_onu8bm",
+              "rotation": "0",
+              "scale": "1",
+              "width": "400px",
+              "height": "225px"
+            }
+          ],
+          "motor": [
+            {
+              "filepath": "img_1764722053551_rqnhzd",
+              "rotation": "0",
+              "scale": "1",
+              "width": "400px",
+              "height": "225px"
+            },
+            {
+              "filepath": "img_1764722053572_naipi5",
+              "rotation": "0",
+              "scale": "1",
+              "width": "400px",
+              "height": "225px"
+            }
+          ]
+        }
+      },
+      {
+        "id": "3",
+        "area": "FILETE",
+        "titulo": "CINTA 3 - PIMPONEO",
+        "tablas": [
+          {
+            "tipo": "banda-3",
+            "headers": [
+              "Campo",
+              "Valor"
+            ],
+            "filas": [
+              {
+                "label": "Tipo de banda",
+                "valores": [
+                  ""
+                ]
+              },
+              {
+                "label": "Material",
+                "valores": [
+                  ""
+                ]
+              },
+              {
+                "label": "Ancho",
+                "valores": [
+                  "500 mm"
+                ]
+              },
+              {
+                "label": "Largo",
+                "valores": [
+                  ""
+                ]
+              },
+              {
+                "label": "Varillas",
+                "valores": [
+                  ""
+                ]
+              },
+              {
+                "label": "Datos",
+                "valores": [
+                  ""
+                ]
+              }
+            ]
+          },
+          {
+            "tipo": "motor-3",
+            "headers": [
+              "Campo",
+              "Valor"
+            ],
+            "filas": [
+              {
+                "label": "Marca / Modelo",
+                "valores": [
+                  "SA47/TDRN80M4"
+                ]
+              },
+              {
+                "label": "Potencia",
+                "valores": [
+                  "0.75 KW"
+                ]
+              },
+              {
+                "label": "Voltaje",
+                "valores": [
+                  "220 D/380 Y volt"
+                ]
+              },
+              {
+                "label": "RPM Motor / Salida",
+                "valores": [
+                  "1440/44 rpm"
+                ]
+              },
+              {
+                "label": "Corriente nominal",
+                "valores": [
+                  "3.20 / 1.84 amp"
+                ]
+              },
+              {
+                "label": "Número de serie",
+                "valores": [
+                  ""
+                ]
+              },
+              {
+                "label": "Relación reducción (i)",
+                "valores": [
+                  "32.48"
+                ]
+              }
+            ]
+          }
+        ],
+        "imagenes": {
+          "banda": [
+            {
+              "filepath": "img_1764722073996_3exw78",
+              "rotation": "0",
+              "scale": "1",
+              "width": "400px",
+              "height": "225px"
+            },
+            {
+              "filepath": "img_1764722074012_wclcl9",
+              "rotation": "0",
+              "scale": "1",
+              "width": "400px",
+              "height": "225px"
+            },
+            {
+              "filepath": "img_1764722074024_xye37s",
+              "rotation": "0",
+              "scale": "1",
+              "width": "400px",
+              "height": "225px"
+            }
+          ],
+          "motor": [
+            {
+              "filepath": "img_1764722080623_hx4dh1",
+              "rotation": "0",
+              "scale": "0.40000000000000013",
+              "width": "288px",
+              "height": "512px"
+            },
+            {
+              "filepath": "img_1764722080640_qp59z4",
+              "rotation": "180",
+              "scale": "0.5000000000000001",
+              "width": "360px",
+              "height": "640px"
+            }
+          ]
+        }
+      },
+      {
+        "id": "4",
+        "area": "FILETE",
+        "titulo": "CINTA 4 - CURVA",
+        "tablas": [
+          {
+            "tipo": "banda-4",
+            "headers": [
+              "Campo",
+              "Valor"
+            ],
+            "filas": [
+              {
+                "label": "Tipo de banda",
+                "valores": [
+                  ""
+                ]
+              },
+              {
+                "label": "Material",
+                "valores": [
+                  ""
+                ]
+              },
+              {
+                "label": "Ancho",
+                "valores": [
+                  ""
+                ]
+              },
+              {
+                "label": "Largo",
+                "valores": [
+                  ""
+                ]
+              },
+              {
+                "label": "Varillas",
+                "valores": [
+                  ""
+                ]
+              },
+              {
+                "label": "Proveedor",
+                "valores": [
+                  ""
+                ]
+              }
+            ]
+          },
+          {
+            "tipo": "motor-4",
+            "headers": [
+              "Campo",
+              "Valor"
+            ],
+            "filas": [
+              {
+                "label": "Marca / Modelo",
+                "valores": [
+                  "Sumimoto Heavy Industries, Ltd TC - FX"
+                ]
+              },
+              {
+                "label": "Potencia",
+                "valores": [
+                  "0,55 KW"
+                ]
+              },
+              {
+                "label": "Voltaje",
+                "valores": [
+                  "220 / 380"
+                ]
+              },
+              {
+                "label": "RPM Motor / Salida",
+                "valores": [
+                  "1400 / 58"
+                ]
+              },
+              {
+                "label": "Corriente nominal",
+                "valores": [
+                  "2.45/1.42 amp"
+                ]
+              },
+              {
+                "label": "Número de serie",
+                "valores": [
+                  "HN2626615"
+                ]
+              },
+              {
+                "label": "Relación reducción (i)",
+                "valores": [
+                  "1:25"
+                ]
+              }
+            ]
+          }
+        ],
+        "imagenes": {
+          "banda": [
+            {
+              "filepath": "img_1764722113739_x7vmaa",
+              "rotation": "0",
+              "scale": "1",
+              "width": "400px",
+              "height": "225px"
+            },
+            {
+              "filepath": "img_1764722113764_sp9i2o",
+              "rotation": "0",
+              "scale": "1",
+              "width": "168.75px",
+              "height": "300px"
+            },
+            {
+              "filepath": "img_1764722113774_s5u9ca",
+              "rotation": "0",
+              "scale": "1",
+              "width": "168.75px",
+              "height": "300px"
+            }
+          ],
+          "motor": [
+            {
+              "filepath": "img_1764722120103_sk0m1k",
+              "rotation": "0",
+              "scale": "1",
+              "width": "400px",
+              "height": "225px"
+            },
+            {
+              "filepath": "img_1764722120119_62eivm",
+              "rotation": "0",
+              "scale": "1",
+              "width": "168.75px",
+              "height": "300px"
+            },
+            {
+              "filepath": "img_1764722120132_w9bqy4",
+              "rotation": "0",
+              "scale": "1",
+              "width": "168.75px",
+              "height": "300px"
+            }
+          ]
+        }
+      }
+    ],
+    "timestamp": "2025-12-03T01:16:16.030Z"
+  },
+  "images": {
+    "img_1764721857426_rqrr7q": {
+      "data": "",
+      "type": "image/jpeg",
+      "name": "WhatsApp Image 2025-12-02 at 03.53.56 (1).jpeg",
+      "size": 100315
+    },
+    "img_1764721857454_7dsz14": {
+      "data": "",
+      "type": "image/jpeg",
+      "name": "WhatsApp Image 2025-12-02 at 03.53.56 (2).jpeg",
+      "size": 78486
+    },
+    "img_1764721857463_38avs6": {
+      "data": "",
+      "type": "image/jpeg",
+      "name": "WhatsApp Image 2025-12-02 at 04.03.30.jpeg",
+      "size": 128982
+    },
+    "img_1764721869047_6vsp85": {
+      "data": "",
+      "type": "image/jpeg",
+      "name": "WhatsApp Image 2025-12-02 at 03.53.55.jpeg",
+      "size": 168699
+    },
+    "img_1764721869064_yp78k0": {
+      "data": "",
+      "type": "image/jpeg",
+      "name": "WhatsApp Image 2025-12-02 at 03.53.56.jpeg",
+      "size": 127606
+    },
+    "img_1764722045775_ndbhus": {
+      "data": "",
+      "type": "image/jpeg",
+      "name": "WhatsApp Image 2025-12-02 at 04.06.25.jpeg",
+      "size": 107938
+    },
+    "img_1764722045790_qx7338": {
+      "data": "",
+      "type": "image/jpeg",
+      "name": "WhatsApp Image 2025-12-02 at 04.06.26 (1).jpeg",
+      "size": 152138
+    },
+    "img_1764722045802_onu8bm": {
+      "data": "",
+      "type": "image/jpeg",
+      "name": "WhatsApp Image 2025-12-02 at 04.06.26 (2).jpeg",
+      "size": 154885
+    },
+    "img_1764722053551_rqnhzd": {
+      "data": "",
+      "type": "image/jpeg",
+      "name": "WhatsApp Image 2025-12-02 at 04.06.27 (1).jpeg",
+      "size": 97235
+    },
+    "img_1764722053572_naipi5": {
+      "data": "",
+      "type": "image/jpeg",
+      "name": "WhatsApp Image 2025-12-02 at 04.06.27.jpeg",
+      "size": 136888
+    },
+    "img_1764722073996_3exw78": {
+      "data": "",
+      "type": "image/jpeg",
+      "name": "WhatsApp Image 2025-12-02 at 04.12.31 (1).jpeg",
+      "size": 69658
+    },
+    "img_1764722074012_wclcl9": {
+      "data": "",
+      "type": "image/jpeg",
+      "name": "WhatsApp Image 2025-12-02 at 04.12.31.jpeg",
+      "size": 121663
+    },
+    "img_1764722074024_xye37s": {
+      "data": "",
+      "type": "image/jpeg",
+      "name": "WhatsApp Image 2025-12-02 at 04.12.32.jpeg",
+      "size": 95014
+    },
+    "img_1764722080623_hx4dh1": {
+      "data": "",
+      "type": "image/jpeg",
+      "name": "WhatsApp Image 2025-12-02 at 04.15.40.jpeg",
+      "size": 97735
+    },
+    "img_1764722080640_qp59z4": {
+      "data": "",
+      "type": "image/jpeg",
+      "name": "WhatsApp Image 2025-12-02 at 04.15.41.jpeg",
+      "size": 164432
+    },
+    "img_1764722113739_x7vmaa": {
+      "data": "",
+      "type": "image/jpeg",
+      "name": "WhatsApp Image 2025-12-02 at 04.23.24.jpeg",
+      "size": 140393
+    },
+    "img_1764722113764_sp9i2o": {
+      "data": "",
+      "type": "image/jpeg",
+      "name": "WhatsApp Image 2025-12-02 at 04.23.25 (4).jpeg",
+      "size": 90337
+    },
+    "img_1764722113774_s5u9ca": {
+      "data": "",
+      "type": "image/jpeg",
+      "name": "WhatsApp Image 2025-12-02 at 04.23.25.jpeg",
+      "size": 90109
+    },
+    "img_1764722120103_sk0m1k": {
+      "data": "",
+      "type": "image/jpeg",
+      "name": "WhatsApp Image 2025-12-02 at 04.23.25 (1).jpeg",
+      "size": 100274
+    },
+    "img_1764722120119_62eivm": {
+      "data": "",
+      "type": "image/jpeg",
+      "name": "WhatsApp Image 2025-12-02 at 04.23.25 (2).jpeg",
+      "size": 127815
+    },
+    "img_1764722120132_w9bqy4": {
+      "data": "",
+      "type": "image/jpeg",
+      "name": "WhatsApp Image 2025-12-02 at 04.23.25 (3).jpeg",
+      "size": 182595
+    }
+  },
+  "imageCount": 21
+}

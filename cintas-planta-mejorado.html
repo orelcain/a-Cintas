@@ -267,6 +267,64 @@
             max-height: 100%;
         }
         
+        /* Canvas de anotaciones */
+        .annotation-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            cursor: crosshair;
+            z-index: 5;
+            pointer-events: auto;
+        }
+        .annotation-canvas.disabled {
+            pointer-events: none;
+        }
+        
+        /* Herramientas de anotación */
+        .annotation-tools {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(44, 62, 80, 0.95);
+            border-radius: 6px;
+            padding: 5px;
+            display: none;
+            z-index: 10;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .image-item:hover .annotation-tools {
+            display: flex;
+        }
+        .annotation-tool-btn {
+            width: 30px;
+            height: 30px;
+            border: none;
+            background: rgba(52, 152, 219, 0.8);
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .annotation-tool-btn:hover {
+            background: rgba(52, 152, 219, 1);
+            transform: scale(1.1);
+        }
+        .annotation-tool-btn.active {
+            background: rgba(46, 204, 113, 0.9);
+        }
+        .color-picker-mini {
+            width: 30px;
+            height: 30px;
+            border: 2px solid white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
         .rotate-btn, .delete-btn, .zoom-controls { 
             position: absolute; 
             top: 5px;
@@ -557,10 +615,15 @@
             <button class="btn btn-primary" onclick="saveAllDataManually()">💾 Guardar Todo</button>
             <button class="btn btn-success" onclick="exportDataWithImages()" style="background: linear-gradient(135deg, #27ae60 0%, #229954 100%);">📦 Exportar Datos+Fotos</button>
             <button class="btn btn-warning" onclick="document.getElementById('import-data-file').click()" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);">📥 Importar Datos+Fotos</button>
-            <input type="file" id="import-data-file" accept=".json" style="display: none;" onchange="importDataWithImages(this)">
+            <input type="file" id="import-data-file" accept=".json" style="display: none;" onchange="importDataWithImages(this).catch(e => console.error(e))">
             <button class="btn btn-pdf" onclick="showPDFOptions()">📄 Exportar PDF Pro</button>
             <button class="btn btn-excel" onclick="exportToExcel()">📊 Exportar Excel</button>
             <button class="btn btn-danger" onclick="clearSavedData()">🗑️ Limpiar Datos</button>
+            <select id="pdf-template" style="padding: 8px 12px; border-radius: 6px; border: 2px solid #fff; background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; font-weight: 700; cursor: pointer; font-size: 11px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); margin-right: 8px;">
+                <option value="completo" selected style="background: #c0392b; color: white;">📋 PDF Completo</option>
+                <option value="ejecutivo" style="background: #c0392b; color: white;">📊 PDF Ejecutivo</option>
+                <option value="tecnico" style="background: #c0392b; color: white;">🔧 PDF Técnico</option>
+            </select>
             <select id="pdf-quality" style="padding: 8px 12px; border-radius: 6px; border: 2px solid #fff; background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%); color: white; font-weight: 700; cursor: pointer; font-size: 11px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
                 <option value="low" style="background: #34495e; color: white;">📉 Calidad Baja</option>
                 <option value="medium" selected style="background: #34495e; color: white;">📊 Calidad Media</option>
@@ -1404,10 +1467,37 @@
                 </div>
                 <button class="rotate-btn" onclick="rotateImage(this.closest('.image-item'))">↻</button>
                 <button class="delete-btn" onclick="deleteImage(this.closest('.image-item'))">×</button>
+                <div class="annotation-tools">
+                    <button class="annotation-tool-btn" onclick="setAnnotationTool(this, 'arrow')" title="Flecha">➤</button>
+                    <button class="annotation-tool-btn" onclick="setAnnotationTool(this, 'circle')" title="Círculo">⭕</button>
+                    <button class="annotation-tool-btn" onclick="setAnnotationTool(this, 'rect')" title="Rectángulo">▭</button>
+                    <button class="annotation-tool-btn" onclick="setAnnotationTool(this, 'free')" title="Dibujo libre">✏️</button>
+                    <button class="annotation-tool-btn" onclick="setAnnotationTool(this, 'text')" title="Texto">T</button>
+                    <input type="color" class="color-picker-mini" value="#ff0000" onchange="setAnnotationColor(this)" title="Color">
+                    <button class="annotation-tool-btn" onclick="undoLastAnnotation(this.closest('.image-item'))" title="Deshacer" style="background: rgba(243, 156, 18, 0.8);">↶</button>
+                    <button class="annotation-tool-btn" onclick="clearAnnotations(this.closest('.image-item'))" title="Borrar todo" style="background: rgba(231, 76, 60, 0.8);">🗑️</button>
+                </div>
             `;
             
             imageItem.innerHTML = controls;
             imageItem.appendChild(img);
+            
+            // Crear canvas de anotaciones
+            const canvas = document.createElement('canvas');
+            canvas.className = 'annotation-canvas disabled';
+            canvas.setAttribute('data-image-id', imageId);
+            imageItem.appendChild(canvas);
+            
+            // Inicializar canvas cuando la imagen cargue
+            img.addEventListener('load', () => {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                canvas.style.width = img.width + 'px';
+                canvas.style.height = img.height + 'px';
+                
+                // Cargar anotaciones guardadas si existen
+                loadAnnotations(imageId, canvas);
+            });
             
             // Agregar campo de descripción
             const descContainer = document.createElement('div');
@@ -1501,10 +1591,262 @@
             }
         }
         
+        // ==================== ANOTACIONES EN IMÁGENES ====================
+        let currentAnnotationTool = null;
+        let annotationColor = '#ff0000';
+        let isDrawing = false;
+        let startX, startY;
+        let annotations = {}; // Almacenar anotaciones por imageId
+        
+        function setAnnotationTool(btn, tool) {
+            const imageItem = btn.closest('.image-item');
+            const canvas = imageItem.querySelector('.annotation-canvas');
+            const allBtns = imageItem.querySelectorAll('.annotation-tool-btn');
+            
+            // Toggle tool
+            if (currentAnnotationTool === tool) {
+                currentAnnotationTool = null;
+                allBtns.forEach(b => b.classList.remove('active'));
+                canvas.classList.add('disabled');
+            } else {
+                currentAnnotationTool = tool;
+                allBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                canvas.classList.remove('disabled');
+                
+                // Configurar eventos del canvas
+                setupCanvasEvents(canvas, imageItem);
+            }
+        }
+        
+        function setAnnotationColor(input) {
+            annotationColor = input.value;
+        }
+        
+        function setupCanvasEvents(canvas, imageItem) {
+            const ctx = canvas.getContext('2d');
+            const imageId = canvas.getAttribute('data-image-id');
+            
+            // Redibujar anotaciones existentes
+            if (annotations[imageId]) {
+                redrawAnnotations(imageId, canvas);
+            }
+            
+            // Prevenir el comportamiento predeterminado que causa el arrastre
+            canvas.addEventListener('dragstart', (e) => e.preventDefault());
+            
+            canvas.addEventListener('mousedown', (e) => {
+                if (!currentAnnotationTool) return;
+                e.preventDefault(); // Prevenir arrastre de imagen
+                e.stopPropagation();
+                
+                isDrawing = true;
+                const rect = canvas.getBoundingClientRect();
+                startX = e.clientX - rect.left;
+                startY = e.clientY - rect.top;
+                
+                if (currentAnnotationTool === 'text') {
+                    const text = prompt('Ingresa el texto:');
+                    if (text) {
+                        ctx.font = '16px Arial';
+                        ctx.fillStyle = annotationColor;
+                        ctx.fillText(text, startX, startY);
+                        
+                        // Guardar anotación
+                        saveAnnotation(imageId, {
+                            type: 'text',
+                            x: startX,
+                            y: startY,
+                            text: text,
+                            color: annotationColor
+                        });
+                    }
+                    isDrawing = false;
+                    currentAnnotationTool = null; // Desactivar después de agregar texto
+                    imageItem.querySelectorAll('.annotation-tool-btn').forEach(b => b.classList.remove('active'));
+                    canvas.classList.add('disabled');
+                }
+            });
+            
+            canvas.addEventListener('mousemove', (e) => {
+                if (!isDrawing || !currentAnnotationTool || currentAnnotationTool === 'text') return;
+                e.preventDefault();
+                
+                const rect = canvas.getBoundingClientRect();
+                const currentX = e.clientX - rect.left;
+                const currentY = e.clientY - rect.top;
+                
+                if (currentAnnotationTool === 'free') {
+                    ctx.strokeStyle = annotationColor;
+                    ctx.lineWidth = 3;
+                    ctx.lineCap = 'round';
+                    ctx.beginPath();
+                    ctx.moveTo(startX, startY);
+                    ctx.lineTo(currentX, currentY);
+                    ctx.stroke();
+                    startX = currentX;
+                    startY = currentY;
+                }
+            });
+            
+            canvas.addEventListener('mouseup', (e) => {
+                if (!isDrawing || !currentAnnotationTool || currentAnnotationTool === 'text') return;
+                e.preventDefault();
+                
+                const rect = canvas.getBoundingClientRect();
+                const endX = e.clientX - rect.left;
+                const endY = e.clientY - rect.top;
+                
+                ctx.strokeStyle = annotationColor;
+                ctx.lineWidth = 3;
+                ctx.fillStyle = 'transparent';
+                
+                if (currentAnnotationTool === 'arrow') {
+                    drawArrow(ctx, startX, startY, endX, endY, annotationColor);
+                    saveAnnotation(imageId, {
+                        type: 'arrow',
+                        x1: startX,
+                        y1: startY,
+                        x2: endX,
+                        y2: endY,
+                        color: annotationColor
+                    });
+                } else if (currentAnnotationTool === 'circle') {
+                    const radius = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+                    ctx.beginPath();
+                    ctx.arc(startX, startY, radius, 0, 2 * Math.PI);
+                    ctx.stroke();
+                    saveAnnotation(imageId, {
+                        type: 'circle',
+                        x: startX,
+                        y: startY,
+                        radius: radius,
+                        color: annotationColor
+                    });
+                } else if (currentAnnotationTool === 'rect') {
+                    ctx.strokeRect(startX, startY, endX - startX, endY - startY);
+                    saveAnnotation(imageId, {
+                        type: 'rect',
+                        x: startX,
+                        y: startY,
+                        width: endX - startX,
+                        height: endY - startY,
+                        color: annotationColor
+                    });
+                } else if (currentAnnotationTool === 'free') {
+                    // El free ya se dibujó en mousemove, solo guardar el final
+                    saveAnnotation(imageId, {
+                        type: 'free',
+                        points: [] // Las líneas libres ya están en el canvas
+                    });
+                }
+                
+                isDrawing = false;
+            });
+        }
+        
+        function drawArrow(ctx, x1, y1, x2, y2, color) {
+            const headlen = 15;
+            const angle = Math.atan2(y2 - y1, x2 - x1);
+            
+            ctx.strokeStyle = color;
+            ctx.fillStyle = color;
+            ctx.lineWidth = 3;
+            
+            // Línea
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+            
+            // Cabeza de flecha
+            ctx.beginPath();
+            ctx.moveTo(x2, y2);
+            ctx.lineTo(x2 - headlen * Math.cos(angle - Math.PI / 6), y2 - headlen * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(x2 - headlen * Math.cos(angle + Math.PI / 6), y2 - headlen * Math.sin(angle + Math.PI / 6));
+            ctx.closePath();
+            ctx.fill();
+        }
+        
+        function saveAnnotation(imageId, annotation) {
+            if (!annotations[imageId]) {
+                annotations[imageId] = [];
+            }
+            annotations[imageId].push(annotation);
+            autoSave();
+        }
+        
+        function redrawAnnotations(imageId, canvas) {
+            if (!annotations[imageId]) return;
+            
+            const ctx = canvas.getContext('2d');
+            annotations[imageId].forEach(ann => {
+                ctx.strokeStyle = ann.color;
+                ctx.fillStyle = ann.color;
+                ctx.lineWidth = 3;
+                
+                if (ann.type === 'arrow') {
+                    drawArrow(ctx, ann.x1, ann.y1, ann.x2, ann.y2, ann.color);
+                } else if (ann.type === 'circle') {
+                    ctx.beginPath();
+                    ctx.arc(ann.x, ann.y, ann.radius, 0, 2 * Math.PI);
+                    ctx.stroke();
+                } else if (ann.type === 'rect') {
+                    ctx.strokeRect(ann.x, ann.y, ann.width, ann.height);
+                } else if (ann.type === 'text') {
+                    ctx.font = '16px Arial';
+                    ctx.fillText(ann.text, ann.x, ann.y);
+                }
+            });
+        }
+        
+        function undoLastAnnotation(imageItem) {
+            const canvas = imageItem.querySelector('.annotation-canvas');
+            const imageId = canvas.getAttribute('data-image-id');
+            
+            if (annotations[imageId] && annotations[imageId].length > 0) {
+                // Eliminar última anotación
+                annotations[imageId].pop();
+                
+                // Limpiar canvas y redibujar
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Redibujar anotaciones restantes
+                if (annotations[imageId].length > 0) {
+                    redrawAnnotations(imageId, canvas);
+                } else {
+                    delete annotations[imageId];
+                }
+                
+                autoSave();
+            }
+        }
+        
+        function clearAnnotations(imageItem) {
+            if (confirm('¿Borrar todas las anotaciones de esta imagen?')) {
+                const canvas = imageItem.querySelector('.annotation-canvas');
+                const imageId = canvas.getAttribute('data-image-id');
+                const ctx = canvas.getContext('2d');
+                
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                annotations[imageId] = [];
+                autoSave();
+            }
+        }
+        
+        async function loadAnnotations(imageId, canvas) {
+            // Las anotaciones se cargan desde el objeto global annotations
+            // que se restaura al cargar los datos guardados
+            if (annotations[imageId]) {
+                redrawAnnotations(imageId, canvas);
+            }
+        }
+        
         // ==================== LOGO Y ENCABEZADO ====================
         let companyLogo = null;
         
-        function handleLogoUpload(event) {
+        async function handleLogoUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
             
@@ -1515,11 +1857,23 @@
             }
             
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 companyLogo = e.target.result;
                 document.getElementById('logoPreview').src = companyLogo;
                 document.getElementById('logoPreview').style.display = 'block';
                 document.getElementById('logoPlaceholder').style.display = 'none';
+                
+                // Guardar logo en IndexedDB
+                try {
+                    const db = await openDatabase();
+                    const tx = db.transaction(['images'], 'readwrite');
+                    const store = tx.objectStore('images');
+                    await store.put({ id: 'company_logo', base64: companyLogo });
+                    console.log('✅ Logo guardado en IndexedDB');
+                } catch (err) {
+                    console.error('Error guardando logo:', err);
+                }
+                
                 autoSave();
             };
             reader.readAsDataURL(file);
@@ -1545,6 +1899,9 @@
         function saveAllData() {
             const data = { cintas: [], timestamp: new Date().toISOString() };
             
+            // Guardar anotaciones
+            data.annotations = annotations;
+            
             // Guardar metadatos y encabezado
             data.metadata = {
                 fechaInspeccion: document.getElementById('fechaInspeccion').value,
@@ -1559,7 +1916,7 @@
                 plantaNombre: document.getElementById('plantaNombre').value,
                 contactoInfo: document.getElementById('contactoInfo').value,
                 emailInfo: document.getElementById('emailInfo').value,
-                logo: companyLogo
+                hasLogo: companyLogo ? true : false
             };
             
             document.querySelectorAll('.cinta-section').forEach((section, index) => {
@@ -1618,12 +1975,23 @@
             });
             
             try {
-                localStorage.setItem('cintasPlantaDataMejorado', JSON.stringify(data));
-                console.log('✅ Datos guardados:', data.cintas.length, 'cintas');
+                const dataString = JSON.stringify(data);
+                const sizeKB = Math.round(dataString.length / 1024);
+                localStorage.setItem('cintasPlantaDataMejorado', dataString);
+                console.log('✅ Datos guardados:', data.cintas.length, 'cintas -', sizeKB, 'KB');
             } catch (e) {
                 console.error('Error al guardar:', e);
                 if (e.name === 'QuotaExceededError') {
-                    alert('⚠️ Espacio insuficiente en localStorage.\n\nSolución: Las imágenes están en IndexedDB (sin límite), solo faltan los textos.\n\nPrueba:\n1. Exportar a Excel/PDF para backup\n2. Eliminar cintas antiguas que no uses\n3. Los datos de texto son muy pequeños, debería funcionar');
+                    const dataSize = Math.round(JSON.stringify(data).length / 1024);
+                    alert(`⚠️ Almacenamiento localStorage lleno (límite ~5-10MB)\n\n` +
+                          `Tamaño actual: ${dataSize} KB\n\n` +
+                          `✅ Las imágenes YA están en IndexedDB (sin límite)\n` +
+                          `✅ El logo de empresa está en IndexedDB\n\n` +
+                          `Soluciones:\n` +
+                          `1. Exportar datos completos (backup)\n` +
+                          `2. Eliminar cintas antiguas\n` +
+                          `3. Acortar observaciones muy largas\n\n` +
+                          `Nota: Solo los TEXTOS usan localStorage`);
                 } else {
                     alert('Error al guardar datos: ' + e.message);
                 }
@@ -1726,6 +2094,11 @@
                 const container = document.getElementById('cintas-container');
                 container.innerHTML = '';
                 
+                // Restaurar anotaciones
+                if (data.annotations) {
+                    annotations = data.annotations;
+                }
+                
                 // Restaurar metadatos
                 if (data.metadata) {
                     document.getElementById('fechaInspeccion').value = data.metadata.fechaInspeccion || '';
@@ -1735,18 +2108,30 @@
                     document.getElementById('observacionesGenerales').value = data.metadata.observacionesGenerales || '';
                 }
                 
-                // Restaurar encabezado y logo
+                // Restaurar encabezado
                 if (data.header) {
                     document.getElementById('empresaNombre').value = data.header.empresaNombre || '';
                     document.getElementById('plantaNombre').value = data.header.plantaNombre || '';
                     document.getElementById('contactoInfo').value = data.header.contactoInfo || '';
                     document.getElementById('emailInfo').value = data.header.emailInfo || '';
                     
-                    if (data.header.logo) {
-                        companyLogo = data.header.logo;
-                        document.getElementById('logoPreview').src = companyLogo;
-                        document.getElementById('logoPreview').style.display = 'block';
-                        document.getElementById('logoPlaceholder').style.display = 'none';
+                    // Cargar logo desde IndexedDB si existe
+                    if (data.header.hasLogo) {
+                        try {
+                            const db = await openDatabase();
+                            const tx = db.transaction(['images'], 'readonly');
+                            const store = tx.objectStore('images');
+                            const logoData = await store.get('company_logo');
+                            if (logoData && logoData.base64) {
+                                companyLogo = logoData.base64;
+                                document.getElementById('logoPreview').src = companyLogo;
+                                document.getElementById('logoPreview').style.display = 'block';
+                                document.getElementById('logoPlaceholder').style.display = 'none';
+                                console.log('✅ Logo cargado desde IndexedDB');
+                            }
+                        } catch (err) {
+                            console.error('Error cargando logo:', err);
+                        }
                     }
                 }
                 
@@ -1890,7 +2275,8 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'mm', 'a4');
             
-            // Obtener configuración de calidad y tamaño
+            // Obtener configuración
+            const template = document.getElementById('pdf-template').value;
             const qualityLevel = document.getElementById('pdf-quality').value;
             const imageSize = document.getElementById('pdf-image-size').value;
             const qualitySettings = pdfQualitySettings[qualityLevel];
@@ -1898,7 +2284,8 @@
             // Tamaño de imagen según selección del usuario
             const imageSizeMM = imageSize === 'small' ? 60 : imageSize === 'medium' ? 85 : imageSize === 'large' ? 110 : 140;
             
-            showSaveStatus(`⏳ Generando PDF (${qualityLevel}, ${imageSizeMM}mm)...`, false);
+            const templateName = template === 'ejecutivo' ? 'Ejecutivo' : template === 'tecnico' ? 'Técnico' : 'Completo';
+            showSaveStatus(`⏳ Generando PDF ${templateName} (${qualityLevel}, ${imageSizeMM}mm)...`, false);
             
             // Ocultar controles temporalmente
             document.querySelectorAll('.export-buttons, .btn-small, .cinta-controls, .row-controls, .col-controls, .delete-btn, .rotate-btn, .zoom-controls, .add-photo-btn').forEach(el => {
@@ -2050,6 +2437,146 @@
                 yPosition += lines.length * 3.5;
             }
             
+            // ===== RESUMEN EJECUTIVO =====
+            // Recopilar estadísticas de todas las cintas
+            const sections = document.querySelectorAll('.cinta-section');
+            const stats = {
+                totalCintas: sections.length,
+                porArea: {},
+                conImagenes: 0,
+                totalImagenes: 0
+            };
+            
+            sections.forEach(section => {
+                const area = section.querySelector('.area-field').value || 'Sin área';
+                stats.porArea[area] = (stats.porArea[area] || 0) + 1;
+                
+                const images = section.querySelectorAll('.image-item img');
+                if (images.length > 0) {
+                    stats.conImagenes++;
+                    stats.totalImagenes += images.length;
+                }
+            });
+            
+            // Agregar página de resumen si hay espacio limitado, sino continuar
+            if (yPosition > 180) {
+                doc.addPage();
+                yPosition = 20;
+            } else {
+                yPosition += 8;
+            }
+            
+            // Título del resumen
+            doc.setFillColor(41, 128, 185);
+            doc.roundedRect(20, yPosition, 170, 7, 2, 2, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'bold');
+            doc.text('RESUMEN EJECUTIVO', 105, yPosition + 4.5, { align: 'center' });
+            yPosition += 12;
+            
+            doc.setTextColor(0, 0, 0);
+            
+            // Estadísticas principales
+            doc.setFillColor(236, 240, 241);
+            doc.roundedRect(20, yPosition, 80, 45, 2, 2, 'F');
+            
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'bold');
+            doc.text('ESTADÍSTICAS GENERALES', 25, yPosition + 5);
+            
+            doc.setFontSize(9);
+            doc.setFont(undefined, 'normal');
+            doc.text(`Total de Cintas: ${stats.totalCintas}`, 25, yPosition + 12);
+            doc.text(`Cintas con Imágenes: ${stats.conImagenes}`, 25, yPosition + 18);
+            doc.text(`Total de Imágenes: ${stats.totalImagenes}`, 25, yPosition + 24);
+            doc.text(`Promedio Imgs/Cinta: ${(stats.totalImagenes / stats.totalCintas).toFixed(1)}`, 25, yPosition + 30);
+            
+            if (estadoGeneral) {
+                doc.setFont(undefined, 'bold');
+                doc.text('Estado General:', 25, yPosition + 38);
+                doc.setFont(undefined, 'normal');
+                const estadoColor = estadoGeneral === 'operativo' ? [39, 174, 96] : 
+                                   estadoGeneral === 'mantenimiento' ? [243, 156, 18] :
+                                   estadoGeneral === 'detenido' ? [149, 165, 166] : [231, 76, 60];
+                doc.setTextColor(estadoColor[0], estadoColor[1], estadoColor[2]);
+                const estadoTexto = estadoGeneral === 'operativo' ? '✓ Operativo' :
+                                   estadoGeneral === 'mantenimiento' ? '⚠ Mantenimiento' :
+                                   estadoGeneral === 'detenido' ? '⬛ Detenido' : '✗ Crítico';
+                doc.text(estadoTexto, 60, yPosition + 38);
+                doc.setTextColor(0, 0, 0);
+            }
+            
+            // Gráfico de distribución por área (si hay más de un área)
+            const areaKeys = Object.keys(stats.porArea);
+            if (areaKeys.length > 0) {
+                doc.setFillColor(236, 240, 241);
+                doc.roundedRect(110, yPosition, 80, 45, 2, 2, 'F');
+                
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'bold');
+                doc.text('DISTRIBUCIÓN POR ÁREA', 115, yPosition + 5);
+                
+                doc.setFontSize(8);
+                doc.setFont(undefined, 'normal');
+                
+                let areaY = yPosition + 12;
+                const colors = [
+                    [52, 152, 219],   // Azul
+                    [46, 204, 113],   // Verde
+                    [155, 89, 182],   // Morado
+                    [241, 196, 15],   // Amarillo
+                    [231, 76, 60],    // Rojo
+                    [26, 188, 156],   // Turquesa
+                    [230, 126, 34]    // Naranja
+                ];
+                
+                for (let index = 0; index < areaKeys.length; index++) {
+                    const area = areaKeys[index];
+                    const count = stats.porArea[area];
+                    const percentage = ((count / stats.totalCintas) * 100).toFixed(0);
+                    const color = colors[index % colors.length];
+                    
+                    // Barra de color
+                    doc.setFillColor(color[0], color[1], color[2]);
+                    const barWidth = (count / stats.totalCintas) * 60;
+                    doc.roundedRect(115, areaY - 2, barWidth, 4, 1, 1, 'F');
+                    
+                    // Texto
+                    doc.setTextColor(0, 0, 0);
+                    const areaText = area.length > 20 ? area.substring(0, 20) + '...' : area;
+                    doc.text(`${areaText}: ${count} (${percentage}%)`, 115, areaY + 5);
+                    areaY += 7;
+                    
+                    if (areaY > yPosition + 43) break; // Máximo 5 áreas
+                }
+            }
+            
+            yPosition += 50;
+            
+            // Si es PDF Ejecutivo, terminar aquí (solo resumen)
+            if (template === 'ejecutivo') {
+                // Pie de página
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    doc.setPage(i);
+                    doc.setFontSize(8);
+                    doc.setTextColor(150, 150, 150);
+                    doc.text(`Pagina ${i} de ${pageCount}`, 105, 290, { align: 'center' });
+                }
+                
+                // Restaurar controles
+                document.querySelectorAll('.export-buttons, .btn-small, .cinta-controls, .row-controls, .col-controls, .delete-btn, .rotate-btn, .zoom-controls, .add-photo-btn').forEach(el => {
+                    el.style.display = '';
+                });
+                
+                // Generar nombre de archivo con fecha
+                const fechaArchivo = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                doc.save(`Informe_Ejecutivo_${fechaArchivo.replace(/\//g, '-')}.pdf`);
+                showSaveStatus('✅ PDF Ejecutivo generado correctamente', true);
+                return;
+            }
+            
             // Continuar en la misma página si hay espacio, sino nueva página
             yPosition += 8;
             if (yPosition > 200) {
@@ -2057,8 +2584,7 @@
                 yPosition = 20;
             }
             
-            // Procesar cada cinta
-            const sections = document.querySelectorAll('.cinta-section');
+            // Procesar cada cinta (para PDF Técnico o Completo)
             
             for (let i = 0; i < sections.length; i++) {
                 const section = sections[i];
@@ -2093,7 +2619,7 @@
                 yPosition += 12;
                 doc.setTextColor(0, 0, 0);
                 
-                // Procesar tablas
+                // Procesar tablas (siempre incluidas en PDF Técnico y Completo)
                 const tables = section.querySelectorAll('table');
                 for (const table of tables) {
                     const isMotor = table.classList.contains('table-motor');
@@ -2145,35 +2671,36 @@
                     yPosition = doc.lastAutoTable.finalY + 8;
                 }
                 
-                // Agregar imágenes
-                const grids = section.querySelectorAll('.image-grid');
-                for (const grid of grids) {
-                    const images = grid.querySelectorAll('.image-item img');
-                    if (images.length > 0) {
-                        const gridType = grid.id.includes('banda') ? 'Banda y Sprockets' : 'Motorreductor';
-                        
-                        if (yPosition > 220) {
-                            doc.addPage();
-                            yPosition = 20;
-                        }
-                        
-                        doc.setFontSize(10);
-                        doc.setFont(undefined, 'bold');
-                        doc.text(`Imagenes - ${gridType}`, 15, yPosition);
-                        yPosition += 5;
-                        
-                        let xPos = 15;
-                        let rowHeight = 0;
-                        let imagesInRow = 0;
-                        const maxImagesPerRow = 2; // Máximo 2 imágenes por fila para que se vean más grandes
-                        
-                        for (let j = 0; j < images.length; j++) { // Mostrar TODAS las imágenes
-                            try {
-                                const img = images[j];
-                                const canvas = document.createElement('canvas');
-                                const ctx = canvas.getContext('2d');
-                                
-                                // Esperar a que la imagen cargue
+                // Agregar imágenes (solo en PDF Completo)
+                if (template === 'completo') {
+                    const grids = section.querySelectorAll('.image-grid');
+                    for (const grid of grids) {
+                        const images = grid.querySelectorAll('.image-item img');
+                        if (images.length > 0) {
+                            const gridType = grid.id.includes('banda') ? 'Banda y Sprockets' : 'Motorreductor';
+                            
+                            if (yPosition > 220) {
+                                doc.addPage();
+                                yPosition = 20;
+                            }
+                            
+                            doc.setFontSize(10);
+                            doc.setFont(undefined, 'bold');
+                            doc.text(`Imagenes - ${gridType}`, 15, yPosition);
+                            yPosition += 5;
+                            
+                            let xPos = 15;
+                            let rowHeight = 0;
+                            let imagesInRow = 0;
+                            const maxImagesPerRow = 2; // Máximo 2 imágenes por fila para que se vean más grandes
+                            
+                            for (let j = 0; j < images.length; j++) { // Mostrar TODAS las imágenes
+                                try {
+                                    const img = images[j];
+                                    const canvas = document.createElement('canvas');
+                                    const ctx = canvas.getContext('2d');
+                                    
+                                    // Esperar a que la imagen cargue
                                 await new Promise((resolve) => {
                                     if (img.complete) {
                                         resolve();
@@ -2217,6 +2744,38 @@
                                 // Dibujar la imagen en el canvas con la resolución aumentada
                                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                                 
+                                // Dibujar anotaciones si existen
+                                const imageItem = img.closest('.image-item');
+                                const imageId = imageItem.getAttribute('data-filepath');
+                                if (annotations[imageId] && annotations[imageId].length > 0) {
+                                    // Escalar las anotaciones al tamaño del canvas
+                                    const scaleX = canvas.width / img.width;
+                                    const scaleY = canvas.height / img.height;
+                                    
+                                    annotations[imageId].forEach(ann => {
+                                        ctx.strokeStyle = ann.color;
+                                        ctx.fillStyle = ann.color;
+                                        ctx.lineWidth = 3 * scale;
+                                        
+                                        if (ann.type === 'arrow') {
+                                            const x1 = ann.x1 * scaleX;
+                                            const y1 = ann.y1 * scaleY;
+                                            const x2 = ann.x2 * scaleX;
+                                            const y2 = ann.y2 * scaleY;
+                                            drawArrow(ctx, x1, y1, x2, y2, ann.color);
+                                        } else if (ann.type === 'circle') {
+                                            ctx.beginPath();
+                                            ctx.arc(ann.x * scaleX, ann.y * scaleY, ann.radius * scaleX, 0, 2 * Math.PI);
+                                            ctx.stroke();
+                                        } else if (ann.type === 'rect') {
+                                            ctx.strokeRect(ann.x * scaleX, ann.y * scaleY, ann.width * scaleX, ann.height * scaleY);
+                                        } else if (ann.type === 'text') {
+                                            ctx.font = (16 * scale) + 'px Arial';
+                                            ctx.fillText(ann.text, ann.x * scaleX, ann.y * scaleY);
+                                        }
+                                    });
+                                }
+                                
                                 // Convertir a JPEG con calidad configurada
                                 const imgData = canvas.toDataURL('image/jpeg', qualitySettings.quality);
                                 
@@ -2237,8 +2796,7 @@
                                 
                                 doc.addImage(imgData, 'JPEG', xPos, yPosition, displayW, displayH);
                                 
-                                // Agregar descripción si existe
-                                const imageItem = img.closest('.image-item');
+                                // Agregar descripción si existe (reutilizando imageItem)
                                 const descriptionInput = imageItem ? imageItem.querySelector('.image-description') : null;
                                 if (descriptionInput && descriptionInput.value.trim()) {
                                     doc.setFontSize(7);
@@ -2264,6 +2822,7 @@
                         yPosition += rowHeight + 8;
                     }
                 }
+                } // Fin del if template === 'completo'
             }
             
             // Pie de página
@@ -2280,9 +2839,10 @@
                 el.style.display = '';
             });
             
-            // Generar nombre de archivo con fecha
+            // Generar nombre de archivo con fecha y template
             const fechaArchivo = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
-            doc.save(`Informe_Cintas_${fechaArchivo.replace(/\//g, '-')}.pdf`);
+            const templateSuffix = template === 'ejecutivo' ? '_Ejecutivo' : template === 'tecnico' ? '_Tecnico' : '';
+            doc.save(`Informe_Cintas${templateSuffix}_${fechaArchivo.replace(/\//g, '-')}.pdf`);
             showSaveStatus('✅ PDF generado correctamente', true);
         }
         
@@ -2315,6 +2875,11 @@
                     });
                 });
                 
+                // Agregar logo de empresa si existe
+                if (parsedData.header && parsedData.header.hasLogo) {
+                    imageIds.push('company_logo');
+                }
+                
                 // Obtener datos de cada imagen
                 for (const imageId of imageIds) {
                     const imageData = await loadImageFromIndexedDB(imageId);
@@ -2324,7 +2889,11 @@
                         // Si ya está en base64 completo (con data:image...)
                         if (typeof imageData.data === 'string' && imageData.data.startsWith('data:')) {
                             base64Data = imageData.data;
-                        } 
+                        }
+                        // Si tiene propiedad base64 (como el logo)
+                        else if (imageData.base64) {
+                            base64Data = imageData.base64;
+                        }
                         // Si es base64 puro (sin prefijo data:)
                         else if (typeof imageData.data === 'string') {
                             // Ya es base64, solo agregar prefijo para el JSON
@@ -2405,12 +2974,20 @@
                 for (const [imageId, imageData] of Object.entries(completeData.images)) {
                     try {
                         // Guardar directamente el base64 (más confiable)
-                        await saveImageToIndexedDB(imageId, {
-                            data: imageData.data, // Ya es base64
-                            type: imageData.type,
-                            name: imageData.name,
-                            size: imageData.size
-                        });
+                        if (imageId === 'company_logo') {
+                            // El logo tiene formato especial
+                            await saveImageToIndexedDB(imageId, {
+                                id: 'company_logo',
+                                base64: imageData.data
+                            });
+                        } else {
+                            await saveImageToIndexedDB(imageId, {
+                                data: imageData.data, // Ya es base64
+                                type: imageData.type,
+                                name: imageData.name,
+                                size: imageData.size
+                            });
+                        }
                         importedImages++;
                     } catch (e) {
                         console.error('Error importando imagen:', imageId, e);

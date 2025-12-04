@@ -507,11 +507,263 @@
             to { opacity: 1; transform: translateX(0); } 
         }
         
+        /* Responsive Design para Móviles y Tablets */
+        @media screen and (max-width: 768px) {
+            body { padding: 8px; font-size: 10px; }
+            .container { padding: 12px; }
+            
+            h1 { font-size: 18px; }
+            .subtitle { font-size: 10px; }
+            
+            /* Botones de exportación */
+            .export-buttons { 
+                padding: 8px 10px; 
+                gap: 6px;
+                flex-direction: column;
+            }
+            .btn { 
+                width: 100%; 
+                padding: 10px 12px; 
+                font-size: 10px;
+                margin-bottom: 4px;
+            }
+            #pdf-template, #pdf-quality, #pdf-image-size {
+                width: 100%;
+                margin-bottom: 4px;
+            }
+            
+            /* Panel de colores */
+            .export-buttons + div {
+                padding: 10px !important;
+            }
+            .export-buttons + div > div {
+                flex-direction: column !important;
+                gap: 10px !important;
+            }
+            
+            /* Encabezado */
+            .header-config-grid {
+                grid-template-columns: 1fr !important;
+                gap: 15px;
+            }
+            .logo-upload-area {
+                max-width: 200px;
+                margin: 0 auto;
+            }
+            .header-info-fields {
+                grid-template-columns: 1fr !important;
+            }
+            
+            /* Metadatos */
+            .metadata-grid {
+                grid-template-columns: 1fr !important;
+                gap: 10px;
+            }
+            .metadata-field label {
+                font-size: 9px;
+            }
+            .metadata-field input,
+            .metadata-field textarea,
+            .metadata-field select {
+                font-size: 10px;
+                padding: 6px 8px;
+            }
+            
+            /* Secciones de cintas */
+            .area-field {
+                font-size: 12px;
+                padding: 8px 10px;
+            }
+            
+            .cinta-section {
+                padding: 10px;
+            }
+            
+            .cinta-header {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .cinta-title-editable {
+                font-size: 12px;
+                margin-right: 0;
+                width: 100%;
+            }
+            
+            .cinta-controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .btn-small {
+                font-size: 9px;
+                padding: 6px 10px;
+                flex: 1;
+            }
+            
+            /* Contenido de cinta - columna única en móvil */
+            .cinta-content {
+                grid-template-columns: 1fr !important;
+                gap: 15px;
+            }
+            
+            /* Tablas */
+            table {
+                font-size: 9px;
+            }
+            th, td {
+                padding: 4px 6px;
+            }
+            .label-col {
+                font-size: 9px;
+            }
+            .editable-field {
+                font-size: 9px;
+                padding: 4px 6px;
+            }
+            
+            /* Controles de fila - siempre visibles en móvil */
+            .row-controls {
+                display: flex !important;
+                position: static;
+                transform: none;
+                flex-direction: row;
+                gap: 4px;
+                margin-top: 4px;
+            }
+            .btn-row {
+                width: 30px;
+                height: 24px;
+                font-size: 11px;
+            }
+            
+            /* Botones de tabla */
+            .table-controls {
+                flex-direction: column;
+                gap: 6px;
+            }
+            .table-controls button {
+                width: 100%;
+                font-size: 9px;
+            }
+            
+            /* Multimedia */
+            .multimedia-section {
+                padding: 8px;
+            }
+            .add-photo-btn {
+                width: 100%;
+                padding: 8px 12px;
+                font-size: 10px;
+            }
+            
+            /* Imágenes */
+            .image-grid {
+                gap: 10px;
+                justify-content: center;
+            }
+            .image-item {
+                max-width: 100% !important;
+                margin: 5px;
+            }
+            
+            /* Controles de imagen - más grandes en móvil */
+            .zoom-controls {
+                left: 5px;
+                padding: 4px 6px;
+            }
+            .zoom-btn {
+                font-size: 18px;
+                padding: 0 8px;
+            }
+            .rotate-btn, .delete-btn {
+                padding: 6px 10px;
+                font-size: 14px;
+            }
+            .rotate-btn { left: 85px; }
+            .delete-btn { left: 125px; }
+            
+            /* Herramientas de anotación - más grandes en móvil */
+            .annotation-tools {
+                display: flex !important; /* Siempre visibles en móvil */
+                top: 50%;
+                right: 2px;
+                transform: translateY(-50%);
+                padding: 4px;
+                gap: 4px;
+            }
+            .annotation-tool-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+            .color-picker-mini {
+                width: 36px;
+                height: 36px;
+            }
+            
+            /* Descripción de imagen */
+            .image-description {
+                font-size: 9px;
+                padding: 4px 6px;
+            }
+            
+            /* Status de guardado */
+            .save-status {
+                bottom: 10px;
+                right: 10px;
+                padding: 8px 12px;
+                font-size: 10px;
+            }
+            
+            /* Botón agregar cinta */
+            .btn-add-section {
+                font-size: 12px;
+                padding: 12px 16px;
+                width: 100%;
+            }
+        }
+        
+        /* Tablets (768px - 1024px) */
+        @media screen and (min-width: 769px) and (max-width: 1024px) {
+            .container { padding: 20px; }
+            
+            .export-buttons {
+                gap: 8px;
+            }
+            .btn {
+                font-size: 10px;
+                padding: 7px 12px;
+            }
+            
+            .cinta-content {
+                grid-template-columns: 1fr !important;
+            }
+            
+            .metadata-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .header-config-grid {
+                grid-template-columns: 180px 1fr;
+            }
+        }
+        
+        /* Landscape móvil */
+        @media screen and (max-height: 500px) and (orientation: landscape) {
+            .annotation-tools {
+                flex-direction: row !important;
+                top: 5px;
+                right: 5px;
+                transform: none;
+            }
+        }
+        
         @media print {
             body { background: white; padding: 0; }
             .container { box-shadow: none; padding: 15px; }
             .export-buttons, .add-photo-btn, .btn-small, .cinta-controls, .table-controls, .row-controls, .col-controls { display: none !important; }
-            .delete-btn, .rotate-btn, .zoom-controls { display: none !important; }
+            .delete-btn, .rotate-btn, .zoom-controls, .annotation-tools { display: none !important; }
             .section-subtitle button, .section-subtitle div { display: none !important; }
             .image-item { page-break-inside: avoid; border: 1px solid #ddd !important; }
             .image-item img { max-width: 100% !important; height: auto !important; object-fit: contain !important; }

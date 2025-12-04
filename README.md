@@ -108,8 +108,16 @@ git clone https://github.com/orelcain/a-Cintas.git
 
 # Abrir el archivo HTML en navegador
 # Recomendado: Chrome, Edge o Firefox
-start cintas-planta-mejorado.html
+start index.html
 ```
+
+### 🌐 Acceso Web
+
+La aplicación está disponible en línea en:
+
+**https://orelcain.github.io/a-Cintas/**
+
+No requiere instalación, funciona directamente desde el navegador.
 
 ### Primeros Pasos
 
